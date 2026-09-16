@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2C9DBB">
+<title>Deep Dive · Maldives Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0D2E43;--muted:#557384;--panel:rgba(255,255,255,.9);--panel2:rgba(255,255,255,.62);--line:rgba(13,46,67,.1);--accent:#0B7D8C;--accent-ink:#fff;--good:#149A7A;--bad:#D2493F;--gold:#D9A441;--chrome:#0D2E43;--shadow:0 2px 6px rgba(4,40,60,.08),0 16px 40px rgba(4,40,60,.16)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#E6F2F4;--muted:#9DB8C2;--panel:rgba(7,30,44,.86);--panel2:rgba(7,30,44,.6);--line:rgba(255,255,255,.1);--accent:#46C4C6;--accent-ink:#04212B;--good:#3CCB9E;--bad:#F07167;--shadow:0 16px 40px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--ink:#E6F2F4;--muted:#9DB8C2;--panel:rgba(7,30,44,.86);--panel2:rgba(7,30,44,.6);--line:rgba(255,255,255,.1);--accent:#46C4C6;--accent-ink:#04212B;--good:#3CCB9E;--bad:#F07167;--shadow:0 16px 40px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'Sora',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.45;color:var(--ink);background:#2C9DBB;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+body.deep{--chrome:#fff}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px;box-shadow:0 0 0 4px var(--accent)}
+
+/* ocean */
+.ocean{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.ocean i{position:absolute;inset:0;opacity:0;transition:opacity 1.4s ease}
+.ocean i.on{opacity:1}
+.o1{background:radial-gradient(120% 70% at 50% 0%,#E2FBF5 0%,#A6EBE0 40%,#5CC9D4 100%)}
+.o2{background:radial-gradient(120% 70% at 50% 0%,#BDF1EA 0%,#6FD3D3 40%,#2C9DBB 100%)}
+.o3{background:radial-gradient(120% 70% at 50% 0%,#71D1D6 0%,#2E9EC0 45%,#17628F 100%)}
+.o4{background:radial-gradient(120% 70% at 50% 0%,#2A92B5 0%,#155F8C 45%,#0B3560 100%)}
+.o5{background:radial-gradient(120% 70% at 50% 0%,#11507A 0%,#0A2F52 45%,#040F22 100%)}
+.rays{position:absolute;inset:-20% -30% auto;height:80%;background:repeating-linear-gradient(100deg,rgba(255,255,255,.14) 0 30px,transparent 30px 90px);filter:blur(10px);mask-image:linear-gradient(#000,transparent);-webkit-mask-image:linear-gradient(#000,transparent);transition:opacity 1.4s;animation:sway 14s ease-in-out infinite alternate}
+@keyframes sway{to{transform:translateX(40px) skewX(-4deg)}}
+.bub{position:absolute;bottom:-20px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.5),rgba(255,255,255,.05) 60%);animation:rise linear infinite;opacity:var(--bo,.25)}
+@keyframes rise{to{transform:translateY(-110vh) translateX(var(--dx,10px))}}
+
+.wrap{position:relative;z-index:1;max-width:540px;margin:0 auto;min-height:100vh;min-height:100dvh;padding:calc(12px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;color:var(--chrome)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:99px;background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap}
+.xbtn{border:0;background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:99px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink)}
+.scr{flex:1;display:flex;flex-direction:column;animation:enter .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes enter{from{opacity:0;transform:translateY(18px)}}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center}
+.panel{background:var(--panel);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-radius:26px;padding:20px;box-shadow:var(--shadow)}
+.btn{border:0;border-radius:18px;padding:16px 20px;font-weight:600;font-size:16px;cursor:pointer;background:var(--panel);color:var(--ink);transition:transform .12s ease,opacity .2s,background .2s;touch-action:manipulation}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 10px 24px rgba(11,125,140,.3)}
+.btn.soft{background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.btn.wide{width:100%}
+.btn.sm{padding:10px 14px;font-size:13px;border-radius:14px}
+h1,h2,h3{margin:0;letter-spacing:-.03em}
+.muted{color:var(--muted)}
+.pz{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--c);border:2px solid #fff;color:#fff;box-shadow:0 4px 12px rgba(4,40,60,.22)}
+.pz svg{width:68%;height:68%;display:block}
+.av{display:block;flex:none}
+
+/* home */
+.hero{text-align:center;padding:26px 0 18px;color:var(--chrome)}
+.hero .mark{width:74px;height:74px;margin:0 auto 14px;border-radius:24px;background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:grid;place-items:center;color:#0B7D8C;box-shadow:var(--shadow)}
+.hero .mark svg{width:46px;height:46px}
+.hero h1{font-size:clamp(38px,11vw,54px);font-weight:700;line-height:1}
+.hero p{margin:10px auto 0;max-width:30ch;opacity:.85}
+.prow{display:flex;align-items:center;gap:10px;margin:8px 0}
+.prow .av{width:44px;height:44px;border:0;padding:0;background:none;cursor:pointer;border-radius:50%}
+.in{font:inherit;flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(127,170,185,.1);color:var(--ink)}
+.x{width:38px;height:38px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-size:22px;cursor:pointer}
+.lbl{font-size:12px;color:var(--muted);margin:16px 0 8px;font-weight:500}
+.seg{display:flex;gap:6px;background:rgba(127,170,185,.14);padding:4px;border-radius:14px}
+.seg button{flex:1;border:0;background:transparent;padding:10px 0;border-radius:11px;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--panel);color:var(--ink);box-shadow:0 2px 8px rgba(4,40,60,.1)}
+.depthline{display:flex;justify-content:space-between;gap:4px;margin-top:6px}
+.depthline span{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.depthline span b{display:block;height:6px;border-radius:6px;margin-bottom:5px}
+
+/* intro */
+.lvnum{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;opacity:.8;color:var(--chrome)}
+.lvname{font-size:clamp(42px,13vw,64px);font-weight:700;line-height:1;margin:8px 0 14px;color:var(--chrome);letter-spacing:-.045em}
+.gauge{display:flex;flex-direction:column;gap:8px;margin:26px 0}
+.gauge div{display:flex;align-items:center;gap:12px;color:var(--chrome);opacity:.45;font-size:13px;font-weight:500;transition:opacity .4s}
+.gauge div i{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.gauge div.done{opacity:.7}
+.gauge div.cur{opacity:1;font-weight:700}
+.gauge div.cur i{box-shadow:0 0 0 5px rgba(255,255,255,.35);animation:ping 1.6s infinite}
+@keyframes ping{50%{box-shadow:0 0 0 9px rgba(255,255,255,0)}}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.facts div{background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:16px;padding:12px 10px;text-align:center}
+.facts b{display:block;font-size:18px}
+.facts span{font-size:11px;color:var(--muted)}
+
+/* pass */
+.pass{text-align:center;color:var(--chrome)}
+.pass .av{width:112px;height:112px;margin:0 auto 18px;animation:bob 3s ease-in-out infinite}
+.pass .av .pz{border-width:3px}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.pass h2{font-size:clamp(30px,9vw,40px)}
+.pass p{margin:8px 0 0;opacity:.85}
+.locked{display:inline-flex;align-items:center;gap:8px;margin-bottom:26px;padding:9px 14px;border-radius:99px;background:var(--panel);color:var(--ink);font-size:13px;font-weight:600;animation:pop .5s cubic-bezier(.2,.9,.3,1.4) both}
+.locked svg{width:16px;height:16px;color:var(--good)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.shield{margin-top:26px;font-size:12px;opacity:.75}
+
+/* ask */
+.askhead{display:flex;align-items:center;gap:12px;margin:10px 0 14px;color:var(--chrome)}
+.askhead .av{width:40px;height:40px}
+.askhead b{display:block;font-size:15px;line-height:1.1}
+.askhead span{font-size:12px;opacity:.8}
+.timer{margin-left:auto;position:relative;width:58px;height:58px;flex:none}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:5}
+.timer .tb{stroke:rgba(255,255,255,.35)}
+.timer .tf{stroke:#fff;stroke-linecap:round}
+body:not(.deep) .timer .tb{stroke:rgba(13,46,67,.12)}
+body:not(.deep) .timer .tf{stroke:var(--accent)}
+.timer b{position:absolute;inset:0;display:grid;place-items:center;font-size:17px;font-weight:700;color:var(--chrome)}
+.timer.low .tf{stroke:#FF7A6B}
+.timer.low b{color:#FF7A6B;animation:tick 1s steps(1) infinite}
+@keyframes tick{50%{transform:scale(1.12)}}
+.qcard{padding:22px 20px}
+.qtext{font-size:clamp(19px,5.4vw,23px);font-weight:600;line-height:1.3;letter-spacing:-.02em}
+.opts{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.opt{display:flex;align-items:center;gap:14px;text-align:left;width:100%;border:0;border-radius:18px;padding:14px 16px;background:var(--panel);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 2px 10px rgba(4,40,60,.1);cursor:pointer;font-weight:500;font-size:16px;transition:transform .15s ease,box-shadow .2s,background .2s;animation:enter .45s cubic-bezier(.2,.8,.2,1) both}
+.opt:nth-child(2){animation-delay:.05s}.opt:nth-child(3){animation-delay:.1s}.opt:nth-child(4){animation-delay:.15s}
+.opt:active{transform:scale(.98)}
+.opt .k{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:13px;font-weight:700;background:rgba(127,170,185,.18);flex:none;transition:background .2s,color .2s}
+.opt.sel{box-shadow:0 0 0 2.5px var(--accent),0 10px 24px rgba(11,125,140,.25);transform:translateY(-1px)}
+.opt.sel .k{background:var(--accent);color:var(--accent-ink)}
+.opt .txt{flex:1}
+
+/* reveal */
+.opt.rv{cursor:default;flex-wrap:wrap;animation:none}
+.opt.rv .who{display:flex;gap:4px;margin-left:auto}
+.opt.rv .who .av{width:26px;height:26px;animation:pop .4s cubic-bezier(.2,.9,.3,1.4) both}
+.opt.rv .who .av .pz{border-width:1.5px}
+.opt.rv.dim{opacity:.55}
+.opt.rv.right{box-shadow:0 0 0 2.5px var(--good),0 12px 28px rgba(20,154,122,.28);opacity:1}
+.opt.rv.right .k{background:var(--good);color:#fff}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:99px;background:rgba(217,164,65,.18);color:#B07A14;margin-bottom:10px}
+body.deep .tag{color:#F2C46B;background:rgba(242,196,107,.16)}
+.fact{margin-top:6px;font-size:14px;color:var(--muted);line-height:1.5}
+.gains{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.gain{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:enter .4s cubic-bezier(.2,.8,.2,1) both}
+.gain .av{width:28px;height:28px}
+.gain .n{flex:1;font-weight:500;font-size:14px}
+.gain .v{font-weight:700;font-size:14px}
+.gain .v.ok{color:var(--good)}
+.gain .v.no{color:var(--muted);font-weight:500}
+.stage-hide{visibility:hidden}
+
+/* boards */
+.board{display:flex;flex-direction:column;gap:8px;margin:18px 0}
+.brow{display:grid;grid-template-columns:24px 36px 1fr auto;align-items:center;gap:10px;padding:10px 14px;border-radius:18px;background:var(--panel);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 2px 10px rgba(4,40,60,.08);animation:enter .5s cubic-bezier(.2,.8,.2,1) both}
+.brow .r{font-weight:700;color:var(--muted);text-align:center}
+.brow .av{width:36px;height:36px}
+.brow .n{min-width:0}
+.brow .n b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar{height:5px;border-radius:5px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--c);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1) .3s}
+.brow .s{text-align:right;font-weight:700;font-size:16px}
+.brow .s small{display:block;font-size:11px;font-weight:600;color:var(--good)}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:26px 0 8px}
+.pod{display:flex;flex-direction:column;align-items:center;width:31%;color:var(--chrome)}
+.pod .av{width:58px;height:58px;margin-bottom:8px;animation:pop .6s cubic-bezier(.2,.9,.3,1.4) both}
+.pod.p1 .av{width:78px;height:78px}
+.pod .nm{font-weight:600;font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .sc{font-size:12px;opacity:.85;margin-bottom:8px}
+.pod .blk{width:100%;border-radius:16px 16px 6px 6px;background:var(--panel);display:grid;place-items:center;font-size:26px;font-weight:700;color:var(--ink);box-shadow:var(--shadow);transform-origin:bottom;animation:grow .7s cubic-bezier(.2,.8,.2,1) both}
+.pod.p1 .blk{height:120px;animation-delay:.5s;color:var(--gold)}
+.pod.p2 .blk{height:88px;animation-delay:.25s}
+.pod.p3 .blk{height:64px;animation-delay:.1s}
+@keyframes grow{from{transform:scaleY(0)}}
+.spacer{flex:1}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="ocean" aria-hidden="true"><i class="o1 on"></i><i class="o2"></i><i class="o3"></i><i class="o4"></i><i class="o5"></i><div class="rays" id="rays"></div><div id="bubs"></div></div>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const app=$('#app');
+const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+const LEVELS=[
+ {name:'Shallow Lagoon',short:'Lagoon'},
+ {name:'House Reef',short:'Reef'},
+ {name:'The Channel',short:'Channel'},
+ {name:'Outer Atoll',short:'Atoll'},
+ {name:'The Deep',short:'Deep'}
+];
+const DOTS=['#8FE3D6','#4FC0CF','#2A8FB8','#15608E','#0A2F52'];
+/* a = index of the correct option. t = trick question */
+const Q=[
+[
+ {q:'What is the capital of the Maldives?',o:['Addu City','Malé','Hulhumalé','Fuvahmulah'],a:1,f:'Malé is one of the most densely populated capitals in the world, built right to the edges of its island in Kaafu Atoll.'},
+ {q:'What is the currency of the Maldives?',o:['Maldivian rupee','Laari','Rufiyaa','Maldivian dinar'],a:2,t:1,f:'Laari is real, but it is the small unit. 100 laari make 1 rufiyaa.'},
+ {q:'What is the official language of the Maldives?',o:['Arabic','English','Dhivehi','Hindi'],a:2,f:'Dhivehi is closely related to Sinhala, the main language of Sri Lanka.'},
+ {q:'What is the main international airport of the Maldives called?',o:['Gan International','Velana International','Malé City Airport','Hanimaadhoo International'],a:1,f:'Velana International Airport sits on Hulhulé island, right next to Malé.'},
+ {q:'How many colours are on the Maldives flag?',o:['Two','Three','Four','One'],a:1,t:1,f:'Most people count red and green, but the white crescent makes three.'}
+],[
+ {q:'In which year did the Maldives gain independence from Britain?',o:['1953','1968','1965','1978'],a:2,t:1,f:'Independence came on 26 July 1965. The Maldives became a republic later, in 1968.'},
+ {q:'What is the national flower of the Maldives?',o:['Hibiscus','Frangipani','Pink rose','Orchid'],a:2,t:1,f:'Not a tropical bloom at all. The pink rose is the national flower.'},
+ {q:'What is the national tree of the Maldives?',o:['Screw pine','Coconut palm','Breadfruit','Banyan'],a:1,f:'The coconut palm also appears on the national emblem.'},
+ {q:'Which script is used to write Dhivehi?',o:['Devanagari','Arabic','Sinhala','Thaana'],a:3,f:'Thaana is written from right to left, like Arabic.'},
+ {q:'How many natural atolls make up the Maldives?',o:['20','26','19','32'],a:1,t:1,f:'The country is run as 20 administrative atolls, but there are 26 natural ones.'}
+],[
+ {q:'In which year did the Maldives rejoin the Commonwealth?',o:['2016','2018','2020','2022'],a:2,t:1,f:'The Maldives left the Commonwealth in 2016 and rejoined in February 2020.'},
+ {q:'Hanifaru Bay, famous for manta rays, is in which atoll?',o:['Ari Atoll','Raa Atoll','Lhaviyani Atoll','Baa Atoll'],a:3,f:'Baa Atoll is a UNESCO Biosphere Reserve, and Hanifaru draws huge gatherings of mantas.'},
+ {q:'What does “bodu beru” literally mean?',o:['Big drum','Loud song','Island dance','Sea rhythm'],a:0,f:'Bodu means big and beru means drum.'},
+ {q:'Which island is known for its glowing “Sea of Stars” beach?',o:['Maafushi','Vaadhoo','Thoddoo','Ukulhas'],a:1,f:'Vaadhoo in Raa Atoll is famous for bioluminescent plankton lighting up the shore.'},
+ {q:'What is garudhiya?',o:['A coconut rice pudding','A dried fish snack','A clear tuna broth','A flatbread'],a:2,f:'Garudhiya is a clear tuna broth, usually eaten with rice, chilli, lime and onion.'}
+],[
+ {q:'Who was the first president of the Maldives?',o:['Ibrahim Nasir','Maumoon Abdul Gayoom','Mohamed Amin Didi','Mohamed Nasheed'],a:2,t:1,f:'Mohamed Amin Didi led the short-lived first republic in 1953. Ibrahim Nasir became president of the second republic in 1968.'},
+ {q:'By tradition, in which year did the Maldives convert to Islam?',o:['853','1153','1343','1558'],a:1,f:'Maldivian tradition dates the conversion to Islam to 1153 AD.'},
+ {q:'On which date is Maldives Independence Day celebrated?',o:['11 November','3 November','26 July','1 January'],a:2,t:1,f:'11 November is Republic Day and 3 November is Victory Day. Independence Day is 26 July.'},
+ {q:'Which famous traveller served as a judge in the Maldives in the 1340s?',o:['Marco Polo','Zheng He','Vasco da Gama','Ibn Battuta'],a:3,f:'The Moroccan traveller Ibn Battuta worked as a qazi in the Maldives and wrote about the islands.'},
+ {q:'How is Maldivian tuna traditionally caught?',o:['Trawling nets','Pole and line','Longlines','Spearfishing'],a:1,f:'Maldivian tuna is mostly caught one fish at a time with pole and line.'}
+],[
+ {q:'Maldives National Day marks which event?',o:['Independence from Britain','Becoming a republic','Victory over the Portuguese','Conversion to Islam'],a:2,t:1,f:'National Day celebrates Muhammad Thakurufaanu’s victory over the Portuguese in 1573.'},
+ {q:'What is the international dialling code for the Maldives?',o:['+94','+968','+961','+960'],a:3,f:'+94 is Sri Lanka, +968 is Oman and +961 is Lebanon.'},
+ {q:'On the Maldives flag, what does the red represent?',o:['Coral reefs','The sunset','Blood of national heroes','Maldivian tuna'],a:2,f:'Red honours the blood of national heroes, green stands for peace and prosperity, and the crescent for Islam.'},
+ {q:'Which country’s territory is closest to the Maldives?',o:['Sri Lanka','India','Seychelles','Oman'],a:1,t:1,f:'India’s Minicoy island lies only around 130 km from the northern Maldives, far closer than Sri Lanka.'},
+ {q:'The Equatorial Channel separates Huvadhu Atoll from which atoll?',o:['Addu','Laamu','Fuvahmulah','Thaa'],a:2,t:1,f:'Addu is the southernmost atoll, but Fuvahmulah is the one directly across the Equatorial Channel from Huvadhu.'}
+]];
+
+const PIECES={
+ manta:'<path d="M12 6c-1.2 0-2 .9-2.6 2.1C7.6 8.6 4.6 9.3 2 11.6c2.9 1 6 1.6 8 2.8.5.9 1.1 1.6 2 1.6s1.5-.7 2-1.6c2-1.2 5.1-1.8 8-2.8-2.6-2.3-5.6-3-7.4-3.5C14 6.9 13.2 6 12 6z"/><path d="M12 15.5v5.5M10.2 7.2 9.4 5.6M13.8 7.2l.8-1.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+ turtle:'<ellipse cx="12" cy="13" rx="4.6" ry="5.6"/><circle cx="12" cy="5.6" r="1.9"/><ellipse cx="6.4" cy="9.6" rx="2.9" ry="1.2" transform="rotate(-35 6.4 9.6)"/><ellipse cx="17.6" cy="9.6" rx="2.9" ry="1.2" transform="rotate(35 17.6 9.6)"/><ellipse cx="7.7" cy="17.8" rx="2" ry="1" transform="rotate(35 7.7 17.8)"/><ellipse cx="16.3" cy="17.8" rx="2" ry="1" transform="rotate(-35 16.3 17.8)"/><path d="M12 9.2v7.6M8.6 13h6.8" fill="none" style="stroke:var(--c)" stroke-width="1.1"/>',
+ shell:'<path d="M12 4C7.2 4 3.5 7.7 3.5 12c0 1.6.6 2.8 1.6 3.7L9 17.6h6l3.9-1.9c1-.9 1.6-2.1 1.6-3.7C20.5 7.7 16.8 4 12 4z"/><path d="M9.3 17.6 10 20h4l.7-2.4z"/><path d="M12 5.5v11M8.6 6.4l1.8 10M15.4 6.4l-1.8 10M5.7 9.2l3.5 7.6M18.3 9.2l-3.5 7.6" fill="none" style="stroke:var(--c)" stroke-width="1" stroke-linecap="round"/>',
+ fish:'<path d="M2.5 12c2.4-3.7 6.2-5.1 9.9-4.4L16 10.2l4.8-3.7-1.1 5.5 1.1 5.5-4.8-3.7-3.6 2.6C8.7 17.1 4.9 15.7 2.5 12z"/><circle cx="6.8" cy="11.2" r="1.05" style="fill:var(--c)"/>',
+ star:'<path d="M12 3.2l2.3 5.6 6 .5-4.6 3.9 1.4 5.9L12 16l-5.1 3.1 1.4-5.9-4.6-3.9 6-.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>',
+ octopus:'<path d="M12 3.5a5.5 5.5 0 0 0-5.5 5.5v2.6c0 1-.8 2-2 2.8 1.6.5 3 .1 3.6-.8l.2 2.6c-.4 1.4-1.3 2.4-2.4 3 1.9.3 3.4-.7 4-2.3l.8 3.6h2.6l.8-3.6c.6 1.6 2.1 2.6 4 2.3-1.1-.6-2-1.6-2.4-3l.2-2.6c.6.9 2 1.3 3.6.8-1.2-.8-2-1.8-2-2.8V9A5.5 5.5 0 0 0 12 3.5z"/><circle cx="10" cy="9.6" r="1" style="fill:var(--c)"/><circle cx="14" cy="9.6" r="1" style="fill:var(--c)"/>',
+ dhoni:'<path d="M2.5 14h19l-3.2 4.5H6.2z"/><path d="M11 3v11" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11.8 4.2c3.2 2 5.2 5 5.7 8.3h-5.7z"/>',
+ palm:'<path d="M12.4 10.5c.6 3.4.4 6.8-.9 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12.5 10.5C11 7.5 7.5 6.3 4 7.6c3 .3 5.4 1.4 8.5 2.9zM12.5 10.5c1.6-3 5-4.2 8.5-2.9-3 .3-5.4 1.4-8.5 2.9zM12.5 10.5C12 7.2 13.8 4.4 17 3.5c-1.8 2-3.2 4.2-4.5 7zM12.5 10.5c-2.4-1.4-3.2-4.2-2.2-6.8.4 2.6 1 4.7 2.2 6.8z"/><circle cx="11.2" cy="12" r="1.1"/><circle cx="13.4" cy="12.2" r="1.1"/>'
+};
+const PK=Object.keys(PIECES);
+const COLORS=['#E5604D','#2D86C9','#E0A82E','#34A064','#9363D1','#EB7FA8','#1FA7A2'];
+const av=(p,cls)=>`<span class="av ${cls||''}"><span class="pz" style="--c:${p.color}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${PIECES[p.piece]}</svg></span></span>`;
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+
+/* ---------- bubbles ---------- */
+(function(){const b=$('#bubs');if(reduce)return;let h='';for(let i=0;i<14;i++){const s=4+Math.random()*12;h+=`<span class="bub" style="left:${Math.random()*100}%;width:${s}px;height:${s}px;animation-duration:${9+Math.random()*12}s;animation-delay:${-Math.random()*20}s;--dx:${(Math.random()*40-20).toFixed(0)}px"></span>`;}b.innerHTML=h;})();
+function setDepth(l){document.querySelectorAll('.ocean i').forEach((el,i)=>el.classList.toggle('on',i===l));
+ document.body.classList.toggle('deep',l>=2);$('#rays').style.opacity=String(Math.max(0,.9-l*.22));
+ document.querySelectorAll('.bub').forEach(b=>b.style.setProperty('--bo',String(.15+l*.1)));
+ const m=document.querySelector('meta[name="theme-color"]');if(m)m.content=['#8ADDD9','#4DB9CB','#2A8FB8','#155F8C','#0A2F52'][l];}
+
+/* ---------- state ---------- */
+let G=null,setup=null,raf=0,askStart=0,sel=null,exitArm=false,revealT=0;
+const T=()=>G.timer*1000;
+const base=()=>(G.lv+1)*100;
+const curQ=()=>{const q=Q[G.lv][G.order[G.lv][G.qi]];return{q:q,perm:G.perm[G.lv+'-'+G.qi]};};
+const turnOrder=()=>{const n=G.players.length,s=(G.lv*5+G.qi)%n;return Array.from({length:n},(_,i)=>(s+i)%n);};
+const curP=()=>G.players[turnOrder()[G.step]];
+function save(){if(G&&G.s!=='final')ls.set('deepdive',JSON.stringify(G));else ls.del('deepdive');}
+function newSetup(){const nm=ls.get('deepdive-names');let names=[];try{names=JSON.parse(nm)||[];}catch(e){}
+ if(names.length<1)names=[{name:'',piece:'manta'},{name:'',piece:'turtle'}];
+ return{players:names.slice(0,7),timer:+(ls.get('deepdive-timer')||20)};}
+function startGame(players,timer){
+ const perm={};for(let l=0;l<5;l++)for(let i=0;i<5;i++)perm[l+'-'+i]=shuffle([0,1,2,3]);
+ G={players:players.map((p,i)=>({name:p.name,piece:p.piece,color:COLORS[i],score:0,lvStart:0})),timer:timer,lv:0,qi:0,step:0,order:[0,1,2,3,4].map(()=>shuffle([0,1,2,3,4])),perm:perm,ans:{},gains:null,s:'intro',last:null};
+ save();go();}
+
+/* ---------- flow ---------- */
+function go(){cancelAnimationFrame(raf);clearTimeout(revealT);exitArm=false;window.scrollTo(0,0);
+ if(!G){setDepth(0);renderHome();return;}
+ setDepth(G.lv);
+ ({intro:renderIntro,pass:renderPass,ask:renderAsk,reveal:renderReveal,levelEnd:renderLevelEnd,final:renderFinal})[G.s]();}
+function lock(choice,timeout){if(!G||G.s!=='ask')return;cancelAnimationFrame(raf);
+ const p=turnOrder()[G.step];const t=Math.min(T(),Date.now()-askStart);
+ G.ans[p]={c:timeout?null:choice,t:t};G.last={p:p,timeout:!!timeout};buzz(timeout?[20,40,20]:15);
+ G.step++;
+ if(G.step>=G.players.length)score();else G.s='pass';
+ save();go();}
+function score(){const {q,perm}=curQ();const right=perm.indexOf(q.a);const b=base();G.gains={};
+ G.players.forEach((p,i)=>{const a=G.ans[i];let g=0;if(a&&a.c===right){g=b+Math.round(b*.5*Math.max(0,1-a.t/T()));}G.gains[i]=g;p.score+=g;});
+ G.s='reveal';G.last=null;}
+function next(){
+ if(G.s==='intro'){G.step=0;G.ans={};G.last=null;G.s='pass';G.players.forEach(p=>p.lvStart=p.score);}
+ else if(G.s==='reveal'){G.qi++;G.ans={};G.gains=null;G.step=0;if(G.qi<5)G.s='pass';else G.s='levelEnd';}
+ else if(G.s==='levelEnd'){G.lv++;G.qi=0;if(G.lv<5)G.s='intro';else{G.lv=4;G.s='final';}}
+ save();go();}
+
+/* ---------- screens ---------- */
+function topbar(mid){return `<div class="top"><button class="xbtn" data-a="exit">Exit</button>${mid||''}<span style="min-width:52px"></span></div>`;}
+function renderHome(){if(!setup)setup=newSetup();const saved=ls.get('deepdive');
+ app.innerHTML=`<div class="scr">
+ <div class="hero"><div class="mark"><svg viewBox="0 0 24 24" fill="currentColor">${PIECES.manta}</svg></div><h1>Deep Dive</h1><p>The Maldives quiz that gets harder the deeper you go.</p></div>
+ ${saved?`<button class="btn primary wide" data-a="resume" style="margin-bottom:12px">Resume game</button>`:''}
+ <div class="panel">
+  <h3 style="font-size:18px">Players</h3>
+  <p class="muted" style="margin:4px 0 6px;font-size:13px">1 to 7 players, sharing one phone. Tap an avatar to change it.</p>
+  <div id="plist"></div>
+  ${setup.players.length<7?'<button class="btn soft sm" data-a="add" style="margin-top:6px">Add player</button>':''}
+  <div class="lbl">Time per answer</div>
+  <div class="seg">${[15,20,30].map(s=>`<button data-a="timer" data-v="${s}" class="${setup.timer===s?'on':''}" aria-pressed="${setup.timer===s}">${s} sec</button>`).join('')}</div>
+  <div class="lbl">5 levels, 25 questions</div>
+  <div class="depthline">${LEVELS.map((l,i)=>`<span><b style="background:${DOTS[i]}"></b>${l.short}</span>`).join('')}</div>
+  <button class="btn ${saved?'soft':'primary'} wide" data-a="start" style="margin-top:18px">${saved?'Start a new game':'Start diving'}</button>
+ </div>
+ <p class="muted" style="text-align:center;font-size:12px;margin-top:16px;color:var(--chrome);opacity:.75">Correct answers score more at deeper levels, plus a bonus for answering fast.</p>
+ </div>`;
+ drawPlayers();}
+function drawPlayers(){const el=$('#plist');if(!el)return;
+ el.innerHTML=setup.players.map((p,i)=>`<div class="prow"><button class="av" data-a="piece" data-i="${i}" aria-label="Change avatar for player ${i+1}">${av({piece:p.piece,color:COLORS[i]}).replace(/^<span class="av ">|<\/span>$/g,'')}</button><input class="in" data-i="${i}" maxlength="14" placeholder="Player ${i+1}" value="${esc(p.name)}" aria-label="Player ${i+1} name">${setup.players.length>1?`<button class="x" data-a="rm" data-i="${i}" aria-label="Remove player ${i+1}">×</button>`:''}</div>`).join('');}
+
+function renderIntro(){const l=G.lv,b=base();
+ app.innerHTML=`${topbar()}<div class="scr center">
+ <div class="lvnum">Level ${l+1} of 5</div>
+ <div class="lvname">${LEVELS[l].name}</div>
+ <p style="margin:0;color:var(--chrome);opacity:.85;max-width:32ch">${['Warm-up questions in the shallows. Still, read carefully.','Deeper water. Some answers are not what they seem.','The current gets stronger. Watch for trick questions.','Few divers make it this far. Think twice before you lock in.','The hardest questions, hiding the most tempting wrong answers.'][l]}</p>
+ <div class="gauge">${LEVELS.map((x,i)=>`<div class="${i<l?'done':i===l?'cur':''}"><i></i>${x.name}</div>`).join('')}</div>
+ <div class="facts"><div><b>5</b><span>questions</span></div><div><b>${b}</b><span>points each</span></div><div><b>+${b/2}</b><span>speed bonus</span></div></div>
+ <button class="btn primary wide" data-a="next">${l===0?'Dive in':'Dive to level '+(l+1)}</button></div>`;}
+
+function renderPass(){const p=curP();const first=G.step===0;let lk='';
+ if(G.last){const lp=G.players[G.last.p];lk=`<div class="locked">${G.last.timeout?CLOCK.replace('<svg','<svg style="color:var(--bad)"'):CHECK}${esc(lp.name)} ${G.last.timeout?'ran out of time':'locked in'}</div>`;}
+ app.innerHTML=`${topbar(`<span class="chip">Level ${G.lv+1} · Q${G.qi+1} of 5</span>`)}<div class="scr center pass">
+ <div>${lk}</div>
+ ${av(p)}
+ <p style="margin:0 0 4px">${first?(G.players.length>1?'Question '+(G.qi+1)+'. First up':'Question '+(G.qi+1)):'Pass the phone to'}</p>
+ <h2>${esc(p.name)}</h2>
+ ${G.players.length>1?`<p class="shield">No peeking. Everyone else looks away.</p>`:''}
+ <div class="spacer" style="max-height:36px"></div>
+ <button class="btn primary wide" data-a="ready" style="margin-top:24px">${G.players.length>1?'I’m '+esc(p.name)+', show question':'Show question'}</button>
+ </div>`;}
+
+function renderAsk(){const p=curP();const {q,perm}=curQ();sel=null;
+ const C=2*Math.PI*25;
+ app.innerHTML=`${topbar(`<span class="chip">Level ${G.lv+1} · Q${G.qi+1} of 5</span>`)}<div class="scr">
+ <div class="askhead">${av(p)}<div><b>${esc(p.name)}</b><span>${LEVELS[G.lv].name}</span></div>
+  <div class="timer" id="timer" role="timer" aria-label="Time left"><svg viewBox="0 0 58 58"><circle class="tb" cx="29" cy="29" r="25"/><circle class="tf" id="tf" cx="29" cy="29" r="25" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg><b id="tn">${G.timer}</b></div></div>
+ <div class="panel qcard"><div class="qtext">${esc(q.q)}</div></div>
+ <div class="opts" role="radiogroup">${perm.map((oi,di)=>`<button class="opt" role="radio" aria-checked="false" data-a="pick" data-i="${di}"><span class="k">${'ABCD'[di]}</span><span class="txt">${esc(q.o[oi])}</span></button>`).join('')}</div>
+ <div class="spacer"></div>
+ <button class="btn primary wide" id="lockbtn" data-a="lock" disabled>Lock in answer</button>
+ </div>`;
+ askStart=Date.now();
+ const tf=$('#tf'),tn=$('#tn'),tw=$('#timer');let lastSec=-1;
+ const tick=()=>{if(!G||G.s!=='ask')return;const left=Math.max(0,T()-(Date.now()-askStart));
+  tf.style.strokeDashoffset=String(C*(1-left/T()));const sec=Math.ceil(left/1000);
+  if(sec!==lastSec){lastSec=sec;tn.textContent=sec;if(sec<=5&&sec>0){tw.classList.add('low');buzz(8);}}
+  if(left<=0){lock(null,true);return;}raf=requestAnimationFrame(tick);};
+ raf=requestAnimationFrame(tick);}
+
+function renderReveal(){const {q,perm}=curQ();const right=perm.indexOf(q.a);
+ const by=[[],[],[],[]];const none=[];G.players.forEach((p,i)=>{const a=G.ans[i];if(a&&a.c!=null)by[a.c].push(p);else none.push(p);});
+ const order=G.players.map((p,i)=>i).sort((a,b)=>G.gains[b]-G.gains[a]);
+ const last=G.qi===4;
+ app.innerHTML=`${topbar(`<span class="chip">Level ${G.lv+1} · Q${G.qi+1} of 5</span>`)}<div class="scr">
+ <div class="panel qcard" style="margin-top:10px">${q.t?'<div class="tag stage-hide" id="trick">Trick question</div>':''}<div class="qtext">${esc(q.q)}</div></div>
+ <div class="opts" id="ropts">${perm.map((oi,di)=>`<div class="opt rv" data-d="${di}"><span class="k">${'ABCD'[di]}</span><span class="txt">${esc(q.o[oi])}</span><span class="who">${by[di].map((p,j)=>av(p).replace('class="av ','style="animation-delay:'+(.15+j*.06)+'s" class="av ')).join('')}</span></div>`).join('')}</div>
+ <div class="stage-hide" id="after">
+  <div class="panel" style="padding:16px 18px"><div class="fact" style="margin:0;color:var(--ink)">${esc(q.f)}</div></div>
+  <div class="gains">${order.map((i,j)=>{const p=G.players[i],g=G.gains[i],a=G.ans[i];return `<div class="gain" style="animation-delay:${j*.06}s">${av(p)}<span class="n">${esc(p.name)}</span><span class="v ${g?'ok':'no'}">${g?'+'+g:(a&&a.c==null?'Time ran out':'No points')}</span></div>`;}).join('')}</div>
+ </div>
+ <div class="spacer"></div>
+ <button class="btn primary wide stage-hide" id="nextbtn" data-a="next">${last?'See level results':'Next question'}</button>
+ </div>`;
+ const doReveal=()=>{if(!G||G.s!=='reveal')return;document.querySelectorAll('#ropts .opt').forEach(el=>{const d=+el.dataset.d;el.classList.add(d===right?'right':'dim');});
+  const tr=$('#trick');if(tr){tr.classList.remove('stage-hide');tr.style.animation='pop .5s cubic-bezier(.2,.9,.3,1.4) both';}
+  const af=$('#after');af.classList.remove('stage-hide');af.style.animation='enter .5s cubic-bezier(.2,.8,.2,1) both';
+  const nb=$('#nextbtn');nb.classList.remove('stage-hide');nb.style.animation='enter .5s cubic-bezier(.2,.8,.2,1) .2s both';
+  buzz(G.players.some((p,i)=>G.gains[i]>0)?[10,30,10]:25);};
+ revealT=setTimeout(doReveal,reduce?0:1100);}
+
+function ranked(){return G.players.map((p,i)=>({p:p,i:i})).sort((a,b)=>b.p.score-a.p.score);}
+function renderLevelEnd(){const rs=ranked();const top=Math.max(1,rs[0].p.score);const l=G.lv;
+ app.innerHTML=`${topbar()}<div class="scr">
+ <div style="text-align:center;color:var(--chrome);margin-top:16px"><div class="lvnum">Level ${l+1} complete</div><h2 style="font-size:32px;margin-top:6px">${LEVELS[l].name}</h2>
+ ${l<4?`<p style="margin:6px 0 0;opacity:.85">Next: ${LEVELS[l+1].name}</p>`:''}</div>
+ <div class="board">${rs.map((r,j)=>`<div class="brow" style="animation-delay:${j*.08}s"><span class="r">${j+1}</span>${av(r.p)}<div class="n"><b>${esc(r.p.name)}</b><div class="bar"><i style="--c:${r.p.color}" data-w="${(r.p.score/top*100).toFixed(1)}"></i></div></div><div class="s">${r.p.score.toLocaleString('en-US')}<small>${r.p.score-r.p.lvStart?'+'+(r.p.score-r.p.lvStart).toLocaleString('en-US'):''}</small></div></div>`).join('')}</div>
+ <div class="spacer"></div>
+ <button class="btn primary wide" data-a="next">${l<4?'Dive deeper':'See final results'}</button></div>`;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.bar i').forEach(b=>b.style.width=b.dataset.w+'%')));}
+
+function renderFinal(){const rs=ranked();ls.del('deepdive');
+ const pod=[rs[1],rs[0],rs[2]];
+ app.innerHTML=`<div class="top"><span></span></div><div class="scr">
+ <div style="text-align:center;color:var(--chrome);margin-top:10px"><div class="lvnum">You reached the deep</div><h2 style="font-size:clamp(30px,9vw,40px);margin-top:6px">${rs.length>1?esc(rs[0].p.name)+' wins':'Dive complete'}</h2><p style="margin:6px 0 0;opacity:.85">${rs[0].p.score.toLocaleString('en-US')} points</p></div>
+ ${rs.length>1?`<div class="podium">${pod.map((r,k)=>r?`<div class="pod p${[2,1,3][k]}">${av(r.p)}<div class="nm">${esc(r.p.name)}</div><div class="sc">${r.p.score.toLocaleString('en-US')}</div><div class="blk">${[2,1,3][k]}</div></div>`:'<div class="pod"></div>').join('')}</div>`:''}
+ ${rs.length>3?`<div class="board">${rs.slice(3).map((r,j)=>`<div class="brow" style="animation-delay:${.8+j*.08}s"><span class="r">${j+4}</span>${av(r.p)}<div class="n"><b>${esc(r.p.name)}</b></div><div class="s">${r.p.score.toLocaleString('en-US')}</div></div>`).join('')}</div>`:''}
+ ${rs.length===1?`<div class="panel" style="text-align:center;margin:24px 0"><div class="muted">Your score</div><div style="font-size:44px;font-weight:700">${rs[0].p.score.toLocaleString('en-US')}</div><div class="muted" style="font-size:13px">out of a possible 11,250</div></div>`:''}
+ <div class="spacer"></div>
+ <div class="actions"><button class="btn primary wide" data-a="again">Play again</button><button class="btn soft wide" data-a="home">Change players</button></div></div>`;}
+
+/* ---------- events ---------- */
+document.addEventListener('input',e=>{const i=e.target.dataset&&e.target.dataset.i;if(setup&&e.target.classList.contains('in')&&i!=null)setup.players[+i].name=e.target.value;});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,i=b.dataset.i!=null?+b.dataset.i:null;
+ switch(a){
+ case 'add':if(setup.players.length<7){setup.players.push({name:'',piece:PK.find(k=>!setup.players.some(p=>p.piece===k))});renderHome();const ins=document.querySelectorAll('#plist .in');ins[ins.length-1].focus();}break;
+ case 'rm':setup.players.splice(i,1);renderHome();break;
+ case 'piece':{const used=setup.players.map(p=>p.piece);let k=PK.indexOf(setup.players[i].piece);for(let n=0;n<PK.length;n++){k=(k+1)%PK.length;if(!used.includes(PK[k]))break;}setup.players[i].piece=PK[k];drawPlayers();buzz(6);break;}
+ case 'timer':setup.timer=+b.dataset.v;document.querySelectorAll('[data-a="timer"]').forEach(x=>{const on=+x.dataset.v===setup.timer;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on);});break;
+ case 'start':{const ps=setup.players.map((p,j)=>({name:(p.name||'').trim()||'Player '+(j+1),piece:p.piece}));
+  ls.set('deepdive-names',JSON.stringify(setup.players.map((p,j)=>({name:(p.name||'').trim(),piece:p.piece}))));ls.set('deepdive-timer',String(setup.timer));startGame(ps,setup.timer);break;}
+ case 'resume':try{G=JSON.parse(ls.get('deepdive'));if(G.s==='ask')G.s='pass';go();}catch(err){ls.del('deepdive');G=null;go();}break;
+ case 'next':next();break;
+ case 'ready':G.s='ask';save();go();break;
+ case 'pick':{sel=i;document.querySelectorAll('.opt').forEach(o=>{const on=+o.dataset.i===i;o.classList.toggle('sel',on);o.setAttribute('aria-checked',on);});$('#lockbtn').disabled=false;buzz(5);break;}
+ case 'lock':if(sel!=null)lock(sel,false);break;
+ case 'exit':if(!exitArm){exitArm=true;b.textContent='Tap again to exit';setTimeout(()=>{exitArm=false;if(b.isConnected)b.textContent='Exit';},2500);return;}
+  cancelAnimationFrame(raf);if(G&&G.s==='ask'){G.s='pass';save();}G=null;setup=newSetup();go();break;
+ case 'again':{const ps=G.players.map(p=>({name:p.name,piece:p.piece}));startGame(ps,G.timer);break;}
+ case 'home':G=null;setup=newSetup();go();break;
+ }});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&G.s!=='ask')save();});
+go();
+})();
+</script>
+</body>
+</html>
