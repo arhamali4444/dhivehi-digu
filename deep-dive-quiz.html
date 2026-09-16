@@ -169,6 +169,25 @@ body.deep .tag{color:#F2C46B;background:rgba(242,196,107,.16)}
 .pod.p3 .blk{height:64px;animation-delay:.1s}
 @keyframes grow{from{transform:scaleY(0)}}
 .spacer{flex:1}
+.waitnote{text-align:center;padding:16px;border-radius:18px;background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-weight:500;font-size:14px;color:var(--ink)}
+.waitnote:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:middle;animation:ping2 1.2s ease-in-out infinite}
+@keyframes ping2{50%{opacity:.25}}
+.lockstrip{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:16px;background:var(--panel2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:13px;font-weight:500;color:var(--ink)}
+.lockstrip .avs{display:flex;gap:4px;flex-wrap:wrap}
+.lockstrip .av{width:26px;height:26px;opacity:.3;transition:opacity .3s,transform .3s}
+.lockstrip .av.lk{opacity:1;transform:scale(1.08)}
+.lockstrip .av .pz{border-width:1.5px}
+.opt:disabled{cursor:default}
+.opts.done .opt:not(.sel){opacity:.5}
+.code{font-size:50px;font-weight:700;letter-spacing:.2em;line-height:1.1;margin:6px 0}
+.lrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lrow:last-of-type{border-bottom:0}
+.lrow .av{width:36px;height:36px;border:0;padding:0;background:none}
+.ttag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--line)}
+.joinrow{display:flex;gap:8px}
+.joinrow .in{text-transform:uppercase;letter-spacing:.22em;font-weight:600}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:#fff;color:#0D2E43;padding:10px 16px;border-radius:14px;font-size:13px;font-weight:500;z-index:80;max-width:90vw;box-shadow:0 12px 30px rgba(0,0,0,.2);display:none}
+.toast.show{display:block;animation:pop .35s cubic-bezier(.2,.9,.3,1.3)}
 .actions{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
@@ -176,6 +195,7 @@ body.deep .tag{color:#F2C46B;background:rgba(242,196,107,.16)}
 <body>
 <div class="ocean" aria-hidden="true"><i class="o1 on"></i><i class="o2"></i><i class="o3"></i><i class="o4"></i><i class="o5"></i><div class="rays" id="rays"></div><div id="bubs"></div></div>
 <div class="wrap" id="app"></div>
+<div class="toast" id="toast" role="status"></div>
 <script>
 (function(){
 const $=s=>document.querySelector(s);
@@ -253,12 +273,20 @@ function setDepth(l){document.querySelectorAll('.ocean i').forEach((el,i)=>el.cl
 
 /* ---------- state ---------- */
 let G=null,setup=null,raf=0,askStart=0,sel=null,exitArm=false,revealT=0;
+let myId=ls.get('deepdive-id');if(!myId){myId='u'+Math.random().toString(36).slice(2,11);ls.set('deepdive-id',myId);}
+let peer=null,conn=null,isHost=false,conns=new Map(),offset=0,qTimer=null,screenKey='',oSel=null,oSelKey='',oLocked=false;
+const isOnline=()=>G&&G.mode==='online';
+const myIdx=()=>G?G.players.findIndex(p=>p.id===myId):-1;
+const viewKey=()=>G?G.s+'|'+G.lv+'|'+G.qi+(G.s==='lobby'?'|'+G.rev:''):'';
+let tt;function toast(m){const el=$('#toast');el.textContent=m;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),3000);}
+function nextBtn(label,hid){if(isOnline()&&!isHost)return `<div class="waitnote${hid?' stage-hide':''}"${hid?' id="nextbtn"':''}>Waiting for the host to continue</div>`;
+ return `<button class="btn primary wide${hid?' stage-hide':''}"${hid?' id="nextbtn"':''} data-a="next">${label}</button>`;}
 const T=()=>G.timer*1000;
 const base=()=>(G.lv+1)*100;
 const curQ=()=>{const q=Q[G.lv][G.order[G.lv][G.qi]];return{q:q,perm:G.perm[G.lv+'-'+G.qi]};};
 const turnOrder=()=>{const n=G.players.length,s=(G.lv*5+G.qi)%n;return Array.from({length:n},(_,i)=>(s+i)%n);};
 const curP=()=>G.players[turnOrder()[G.step]];
-function save(){if(G&&G.s!=='final')ls.set('deepdive',JSON.stringify(G));else ls.del('deepdive');}
+function save(){if(isOnline())return;if(G&&G.s!=='final')ls.set('deepdive',JSON.stringify(G));else ls.del('deepdive');}
 function newSetup(){const nm=ls.get('deepdive-names');let names=[];try{names=JSON.parse(nm)||[];}catch(e){}
  if(names.length<1)names=[{name:'',piece:'manta'},{name:'',piece:'turtle'}];
  return{players:names.slice(0,7),timer:+(ls.get('deepdive-timer')||20)};}
@@ -271,6 +299,7 @@ function startGame(players,timer){
 function go(){cancelAnimationFrame(raf);clearTimeout(revealT);exitArm=false;window.scrollTo(0,0);
  if(!G){setDepth(0);renderHome();return;}
  setDepth(G.lv);
+ if(isOnline()){({lobby:renderLobby,intro:renderIntro,q:renderAskOnline,reveal:renderReveal,levelEnd:renderLevelEnd,final:renderFinal})[G.s]();screenKey=viewKey();return;}
  ({intro:renderIntro,pass:renderPass,ask:renderAsk,reveal:renderReveal,levelEnd:renderLevelEnd,final:renderFinal})[G.s]();}
 function lock(choice,timeout){if(!G||G.s!=='ask')return;cancelAnimationFrame(raf);
  const p=turnOrder()[G.step];const t=Math.min(T(),Date.now()-askStart);
@@ -287,6 +316,100 @@ function next(){
  else if(G.s==='levelEnd'){G.lv++;G.qi=0;if(G.lv<5)G.s='intro';else{G.lv=4;G.s='final';}}
  save();go();}
 
+/* ---------- multiple phones ---------- */
+const PREFIX='deepdive-v1-';
+function loadPeer(){if(window.Peer)return Promise.resolve();return new Promise((res,rej)=>{const srcs=['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js'];let i=0;
+ const next=()=>{if(i>=srcs.length)return rej(new Error('load'));const sc=document.createElement('script');sc.src=srcs[i++];sc.onload=()=>window.Peer?res():next();sc.onerror=next;document.head.appendChild(sc);};next();});}
+function pErr(e){const t=e&&e.type;if(t==='browser-incompatible')return 'This browser can’t play online. Try Safari or Chrome.';if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed')return 'Couldn’t reach the game server. Check your internet connection.';return 'Couldn’t connect. Try again.';}
+function genCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ';let c='';for(let i=0;i<4;i++)c+=a[Math.floor(Math.random()*a.length)];return c;}
+function cleanup(){clearTimeout(qTimer);try{conn&&conn.close();}catch(e){}conns.forEach(c=>{try{c.close();}catch(e){}});conns=new Map();try{peer&&peer.destroy();}catch(e){}peer=null;conn=null;isHost=false;}
+function redact(){const d=JSON.parse(JSON.stringify(G));if(d.s==='q'){d.locked=Object.keys(d.ans||{}).map(Number);d.ans={};}return d;}
+function sendTo(c){if(c&&c.open)try{c.send({k:'state',s:redact(),now:Date.now()});}catch(e){}}
+function refresh(prevKey){const k=viewKey();
+ if(k===prevKey&&screenKey===k&&G.s==='q'){updateLockStrip();return;}
+ if(k===prevKey&&screenKey===k&&G.s!=='lobby')return;go();}
+function hostCommit(){G.rev=(G.rev||0)+1;const prev=screenKey;conns.forEach(sendTo);refresh(prev);}
+function lobbyState(name){return{mode:'online',code:'',hostId:myId,players:[{id:myId,name:name,piece:'manta',color:COLORS[0],score:0,lvStart:0}],timer:+(ls.get('deepdive-timer')||20),lv:0,qi:0,s:'lobby',ans:{},gains:null,rev:1};}
+function hostStartGame(){const perm={};for(let l=0;l<5;l++)for(let i=0;i<5;i++)perm[l+'-'+i]=shuffle([0,1,2,3]);
+ G.order=[0,1,2,3,4].map(()=>shuffle([0,1,2,3,4]));G.perm=perm;G.lv=0;G.qi=0;G.ans={};G.gains=null;G.players.forEach((p,i)=>{p.score=0;p.lvStart=0;p.color=COLORS[i];});G.s='intro';hostCommit();}
+function startQ(){G.s='q';G.ans={};G.gains=null;G.startedAt=Date.now();G.endsAt=G.startedAt+T();const key=G.lv+'-'+G.qi;clearTimeout(qTimer);qTimer=setTimeout(()=>finishQ(key),T()+900);hostCommit();}
+function finishQ(key){if(!G||G.s!=='q'||key!==G.lv+'-'+G.qi)return;clearTimeout(qTimer);score();hostCommit();}
+function hostAns(idx,c,key){if(!G||G.s!=='q'||key!==G.lv+'-'+G.qi||idx<0||G.ans[idx]||Date.now()>G.endsAt+900)return;if(!(c>=0&&c<=3))return;
+ G.ans[idx]={c:c,t:Math.min(T(),Date.now()-G.startedAt)};if(Object.keys(G.ans).length>=G.players.length)finishQ(key);else hostCommit();}
+function hostNext(){
+ if(G.s==='intro'){G.players.forEach(p=>p.lvStart=p.score);startQ();}
+ else if(G.s==='reveal'){G.qi++;if(G.qi<5)startQ();else{G.s='levelEnd';hostCommit();}}
+ else if(G.s==='levelEnd'){G.lv++;G.qi=0;if(G.lv<5)G.s='intro';else{G.lv=4;G.s='final';}hostCommit();}}
+function onHost(c,d){if(!G||!d||typeof d!=='object')return;
+ if(d.k==='hello'){const id=String(d.id||'').slice(0,24),name=String(d.name||'').trim().slice(0,14)||'Player';if(!id||id===myId)return;
+  c.pid=id;const old=conns.get(id);if(old&&old!==c)try{old.close();}catch(e){}conns.set(id,c);
+  if(G.players.some(p=>p.id===id)){sendTo(c);return;}
+  if(G.s==='final'){try{c.send({k:'err',m:'That game has finished.'});}catch(e){}return;}
+  if(G.players.length>=7){try{c.send({k:'err',m:'That room is full.'});}catch(e){}return;}
+  const i=G.players.length;G.players.push({id:id,name:name,piece:PK.find(k=>!G.players.some(p=>p.piece===k))||PK[0],color:COLORS[i],score:0,lvStart:0});hostCommit();return;}
+ if(!c.pid)return;const idx=G.players.findIndex(p=>p.id===c.pid);if(idx<0)return;
+ if(d.k==='piece'&&G.s==='lobby'&&PIECES[d.p]&&!G.players.some(p=>p.id!==c.pid&&p.piece===d.p)){G.players[idx].piece=d.p;hostCommit();}
+ else if(d.k==='leave'&&G.s==='lobby'){G.players.splice(idx,1);G.players.forEach((p,i)=>p.color=COLORS[i]);conns.delete(c.pid);hostCommit();}
+ else if(d.k==='ans')hostAns(idx,+d.c,String(d.key));}
+async function oCreate(btn){const name=($('#oname').value||'').trim();if(!name){toast('Enter your name first.');$('#oname').focus();return;}ls.set('deepdive-oname',name);btn.disabled=true;
+ try{await loadPeer();}catch(e){toast('Couldn’t load online play. Check your internet connection.');btn.disabled=false;return;}
+ const attempt=n=>{const code=genCode();const pr=new Peer(PREFIX+code);let opened=false;
+  pr.on('open',()=>{opened=true;cleanup();peer=pr;isHost=true;G=lobbyState(name);G.code=code;go();});
+  pr.on('connection',c=>{if(peer!==pr){try{c.close();}catch(e){}return;}c.on('data',d=>{try{onHost(c,d);}catch(e){}});c.on('close',()=>{if(c.pid&&conns.get(c.pid)===c)conns.delete(c.pid);});c.on('error',()=>{});});
+  pr.on('disconnected',()=>{if(peer===pr)setTimeout(()=>{try{if(!pr.destroyed)pr.reconnect();}catch(e){}},1500);});
+  pr.on('error',e=>{if(!opened){try{pr.destroy();}catch(x){}if(e.type==='unavailable-id'&&n<4)attempt(n+1);else{toast(pErr(e));btn.disabled=false;}}});};
+ attempt(0);}
+async function oJoin(btn){const name=($('#oname').value||'').trim();const code=($('#ocode').value||'').trim().toUpperCase();
+ if(!name){toast('Enter your name first.');$('#oname').focus();return;}if(!/^[A-Z]{4}$/.test(code)){toast('Room codes are 4 letters.');return;}
+ ls.set('deepdive-oname',name);btn.disabled=true;
+ try{await loadPeer();}catch(e){toast('Couldn’t load online play. Check your internet connection.');btn.disabled=false;return;}
+ const pr=new Peer();let done=false;
+ const fail=m=>{if(done)return;done=true;clearTimeout(to);toast(m);btn.disabled=false;try{pr.destroy();}catch(e){}};
+ const to=setTimeout(()=>fail('Couldn’t reach room '+code+'. Check the code and that the host has the game open.'),15000);
+ pr.on('open',()=>{const c=pr.connect(PREFIX+code,{reliable:true});
+  c.on('open',()=>{if(done)return;done=true;clearTimeout(to);cleanup();peer=pr;conn=c;isHost=false;c.send({k:'hello',id:myId,name:name});});
+  c.on('data',d=>{if(conn!==c||!d||typeof d!=='object')return;
+   if(d.k==='err'){toast(d.m);cleanup();G=null;go();return;}
+   if(d.k==='state'&&d.s){if(G&&G.code===d.s.code&&(d.s.rev||0)<=(G.rev||0))return;offset=(d.now||Date.now())-Date.now();const prev=screenKey;G=d.s;refresh(prev);}});
+  c.on('close',()=>{if(conn===c){toast('The host closed the room.');cleanup();G=null;go();}});});
+ pr.on('error',e=>{if(e.type==='peer-unavailable')fail('No room found with code '+code+'. Make sure the host has it open.');else if(!done)fail(pErr(e));});}
+function leaveOnline(){if(conn&&conn.open&&G&&G.s==='lobby')try{conn.send({k:'leave'});}catch(e){}setTimeout(cleanup,150);clearTimeout(qTimer);G=null;go();}
+
+function renderLobby(){const host=isHost;
+ app.innerHTML=`${topbar('<span class="chip">Room lobby</span>')}<div class="scr">
+ <div class="panel" style="text-align:center;margin-top:10px"><div class="muted">Room code</div><div class="code">${esc(G.code)}</div><p class="muted" style="margin:0;font-size:13px">Friends open this game, tap Join and enter this code.</p></div>
+ <div class="panel" style="margin-top:14px"><h3 style="font-size:18px">Players ${G.players.length} of 7</h3>
+ ${G.players.map((p,i)=>`<div class="lrow">${p.id===myId?`<button class="av" data-a="opiece" aria-label="Change your avatar">${av(p).replace(/^<span class="av ">|<\/span>$/g,'')}</button>`:av(p)}<span style="flex:1;font-weight:500">${esc(p.name)}</span>${p.id===G.hostId?'<span class="ttag">Host</span>':''}${p.id===myId?'<span class="ttag">You</span>':''}</div>`).join('')}
+ <p class="muted" style="font-size:12px;margin:10px 0 0">Tap your avatar to change it.</p>
+ ${host?`<div class="lbl">Time per answer</div><div class="seg">${[15,20,30].map(v=>`<button data-a="otimer" data-v="${v}" class="${G.timer===v?'on':''}" aria-pressed="${G.timer===v}">${v} sec</button>`).join('')}</div>
+ <button class="btn primary wide" data-a="ostart" style="margin-top:16px" ${G.players.length<2?'disabled':''}>${G.players.length<2?'Waiting for players to join':'Start the dive'}</button>`:`<div class="waitnote" style="margin-top:16px">Waiting for the host to start</div>`}
+ </div></div>`;}
+function renderAskOnline(){const me=myIdx();const {q,perm}=curQ();const key=G.lv+'-'+G.qi;
+ if(oSelKey!==key){oSelKey=key;oSel=null;oLocked=false;}
+ const C=2*Math.PI*25;
+ app.innerHTML=`${topbar(`<span class="chip">Level ${G.lv+1} · Q${G.qi+1} of 5</span>`)}<div class="scr">
+ <div class="askhead">${me>=0?av(G.players[me]):''}<div><b>${me>=0?esc(G.players[me].name):'Watching'}</b><span>${LEVELS[G.lv].name}</span></div>
+  <div class="timer" id="timer" role="timer" aria-label="Time left"><svg viewBox="0 0 58 58"><circle class="tb" cx="29" cy="29" r="25"/><circle class="tf" id="tf" cx="29" cy="29" r="25" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg><b id="tn">${G.timer}</b></div></div>
+ <div class="panel qcard"><div class="qtext">${esc(q.q)}</div></div>
+ <div class="opts" id="oopts" role="radiogroup">${perm.map((oi,di)=>`<button class="opt${oSel===di?' sel':''}" role="radio" aria-checked="${oSel===di}" data-a="opick" data-i="${di}"><span class="k">${'ABCD'[di]}</span><span class="txt">${esc(q.o[oi])}</span></button>`).join('')}</div>
+ <div class="lockstrip" id="lockstrip"></div>
+ <div class="spacer"></div>
+ <button class="btn primary wide" id="lockbtn" data-a="olock" style="margin-top:14px" disabled>Lock in answer</button></div>`;
+ updateLockStrip();
+ const tf=$('#tf'),tn=$('#tn'),tw=$('#timer');let lastSec=-1;
+ const tick=()=>{if(!G||G.s!=='q'||G.lv+'-'+G.qi!==key)return;const left=Math.max(0,G.endsAt-(Date.now()+(isHost?0:offset)));
+  tf.style.strokeDashoffset=String(C*(1-left/T()));const sec=Math.ceil(left/1000);
+  if(sec!==lastSec){lastSec=sec;tn.textContent=sec;if(sec<=5&&sec>0){tw.classList.add('low');if(!mineLocked())buzz(8);}}
+  if(left<=0){if(!mineLocked()){oLocked=true;updateLockStrip(true);}return;}raf=requestAnimationFrame(tick);};
+ raf=requestAnimationFrame(tick);}
+function lockedList(){return G.locked||Object.keys(G.ans||{}).map(Number);}
+function mineLocked(){return oLocked||lockedList().includes(myIdx());}
+function updateLockStrip(timeUp){const el=$('#lockstrip');if(!el||G.s!=='q')return;const L=lockedList();const n=L.length,total=G.players.length;
+ el.innerHTML=`<div class="avs">${G.players.map((p,i)=>av(p,L.includes(i)?'lk':'')).join('')}</div><span style="margin-left:auto">${n} of ${total} locked in</span>`;
+ const done=mineLocked();const lb=$('#lockbtn'),op=$('#oopts');
+ if(op){op.classList.toggle('done',done);op.querySelectorAll('.opt').forEach(o=>o.disabled=done);}
+ if(lb){lb.disabled=done||oSel==null;lb.textContent=done?(oSel!=null&&!timeUp?'Locked in. Waiting for others':(timeUp||oSel==null?'Time’s up':'Locked in')):'Lock in answer';}}
+
 /* ---------- screens ---------- */
 function topbar(mid){return `<div class="top"><button class="xbtn" data-a="exit">Exit</button>${mid||''}<span style="min-width:52px"></span></div>`;}
 function renderHome(){if(!setup)setup=newSetup();const saved=ls.get('deepdive');
@@ -294,7 +417,7 @@ function renderHome(){if(!setup)setup=newSetup();const saved=ls.get('deepdive');
  <div class="hero"><div class="mark"><svg viewBox="0 0 24 24" fill="currentColor">${PIECES.manta}</svg></div><h1>Deep Dive</h1><p>The Maldives quiz that gets harder the deeper you go.</p></div>
  ${saved?`<button class="btn primary wide" data-a="resume" style="margin-bottom:12px">Resume game</button>`:''}
  <div class="panel">
-  <h3 style="font-size:18px">Players</h3>
+  <h3 style="font-size:18px">Pass one phone</h3>
   <p class="muted" style="margin:4px 0 6px;font-size:13px">1 to 7 players, sharing one phone. Tap an avatar to change it.</p>
   <div id="plist"></div>
   ${setup.players.length<7?'<button class="btn soft sm" data-a="add" style="margin-top:6px">Add player</button>':''}
@@ -303,6 +426,14 @@ function renderHome(){if(!setup)setup=newSetup();const saved=ls.get('deepdive');
   <div class="lbl">5 levels, 25 questions</div>
   <div class="depthline">${LEVELS.map((l,i)=>`<span><b style="background:${DOTS[i]}"></b>${l.short}</span>`).join('')}</div>
   <button class="btn ${saved?'soft':'primary'} wide" data-a="start" style="margin-top:18px">${saved?'Start a new game':'Start diving'}</button>
+ </div>
+ <div class="panel" style="margin-top:14px">
+  <h3 style="font-size:18px">Play on multiple phones</h3>
+  <p class="muted" style="margin:4px 0 12px;font-size:13px">Everyone answers at the same time on their own phone. The host’s phone runs the game, so keep it open.</p>
+  <input class="in" id="oname" maxlength="14" placeholder="Your name" value="${esc(ls.get('deepdive-oname')||'')}" style="width:100%" aria-label="Your name">
+  <button class="btn primary wide" data-a="ocreate" style="margin-top:10px">Create a room</button>
+  <div class="lbl" style="text-align:center">or join a friend’s room</div>
+  <div class="joinrow"><input class="in" id="ocode" maxlength="4" placeholder="Code" autocomplete="off" autocapitalize="characters" aria-label="Room code"><button class="btn soft" data-a="ojoin">Join</button></div>
  </div>
  <p class="muted" style="text-align:center;font-size:12px;margin-top:16px;color:var(--chrome);opacity:.75">Correct answers score more at deeper levels, plus a bonus for answering fast.</p>
  </div>`;
@@ -317,7 +448,7 @@ function renderIntro(){const l=G.lv,b=base();
  <p style="margin:0;color:var(--chrome);opacity:.85;max-width:32ch">${['Warm-up questions in the shallows. Still, read carefully.','Deeper water. Some answers are not what they seem.','The current gets stronger. Watch for trick questions.','Few divers make it this far. Think twice before you lock in.','The hardest questions, hiding the most tempting wrong answers.'][l]}</p>
  <div class="gauge">${LEVELS.map((x,i)=>`<div class="${i<l?'done':i===l?'cur':''}"><i></i>${x.name}</div>`).join('')}</div>
  <div class="facts"><div><b>5</b><span>questions</span></div><div><b>${b}</b><span>points each</span></div><div><b>+${b/2}</b><span>speed bonus</span></div></div>
- <button class="btn primary wide" data-a="next">${l===0?'Dive in':'Dive to level '+(l+1)}</button></div>`;}
+ ${nextBtn(l===0?'Dive in':'Dive to level '+(l+1))}</div>`;}
 
 function renderPass(){const p=curP();const first=G.step===0;let lk='';
  if(G.last){const lp=G.players[G.last.p];lk=`<div class="locked">${G.last.timeout?CLOCK.replace('<svg','<svg style="color:var(--bad)"'):CHECK}${esc(lp.name)} ${G.last.timeout?'ran out of time':'locked in'}</div>`;}
@@ -358,10 +489,10 @@ function renderReveal(){const {q,perm}=curQ();const right=perm.indexOf(q.a);
  <div class="opts" id="ropts">${perm.map((oi,di)=>`<div class="opt rv" data-d="${di}"><span class="k">${'ABCD'[di]}</span><span class="txt">${esc(q.o[oi])}</span><span class="who">${by[di].map((p,j)=>av(p).replace('class="av ','style="animation-delay:'+(.15+j*.06)+'s" class="av ')).join('')}</span></div>`).join('')}</div>
  <div class="stage-hide" id="after">
   <div class="panel" style="padding:16px 18px"><div class="fact" style="margin:0;color:var(--ink)">${esc(q.f)}</div></div>
-  <div class="gains">${order.map((i,j)=>{const p=G.players[i],g=G.gains[i],a=G.ans[i];return `<div class="gain" style="animation-delay:${j*.06}s">${av(p)}<span class="n">${esc(p.name)}</span><span class="v ${g?'ok':'no'}">${g?'+'+g:(a&&a.c==null?'Time ran out':'No points')}</span></div>`;}).join('')}</div>
+  <div class="gains">${order.map((i,j)=>{const p=G.players[i],g=G.gains[i],a=G.ans[i];return `<div class="gain" style="animation-delay:${j*.06}s">${av(p)}<span class="n">${esc(p.name)}</span><span class="v ${g?'ok':'no'}">${g?'+'+g:((!a||a.c==null)?'No answer':'No points')}</span></div>`;}).join('')}</div>
  </div>
  <div class="spacer"></div>
- <button class="btn primary wide stage-hide" id="nextbtn" data-a="next">${last?'See level results':'Next question'}</button>
+ ${nextBtn(last?'See level results':'Next question',true)}
  </div>`;
  const doReveal=()=>{if(!G||G.s!=='reveal')return;document.querySelectorAll('#ropts .opt').forEach(el=>{const d=+el.dataset.d;el.classList.add(d===right?'right':'dim');});
   const tr=$('#trick');if(tr){tr.classList.remove('stage-hide');tr.style.animation='pop .5s cubic-bezier(.2,.9,.3,1.4) both';}
@@ -377,10 +508,10 @@ function renderLevelEnd(){const rs=ranked();const top=Math.max(1,rs[0].p.score);
  ${l<4?`<p style="margin:6px 0 0;opacity:.85">Next: ${LEVELS[l+1].name}</p>`:''}</div>
  <div class="board">${rs.map((r,j)=>`<div class="brow" style="animation-delay:${j*.08}s"><span class="r">${j+1}</span>${av(r.p)}<div class="n"><b>${esc(r.p.name)}</b><div class="bar"><i style="--c:${r.p.color}" data-w="${(r.p.score/top*100).toFixed(1)}"></i></div></div><div class="s">${r.p.score.toLocaleString('en-US')}<small>${r.p.score-r.p.lvStart?'+'+(r.p.score-r.p.lvStart).toLocaleString('en-US'):''}</small></div></div>`).join('')}</div>
  <div class="spacer"></div>
- <button class="btn primary wide" data-a="next">${l<4?'Dive deeper':'See final results'}</button></div>`;
+ ${nextBtn(l<4?'Dive deeper':'See final results')}</div>`;
  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('.bar i').forEach(b=>b.style.width=b.dataset.w+'%')));}
 
-function renderFinal(){const rs=ranked();ls.del('deepdive');
+function renderFinal(){const rs=ranked();if(!isOnline())ls.del('deepdive');
  const pod=[rs[1],rs[0],rs[2]];
  app.innerHTML=`<div class="top"><span></span></div><div class="scr">
  <div style="text-align:center;color:var(--chrome);margin-top:10px"><div class="lvnum">You reached the deep</div><h2 style="font-size:clamp(30px,9vw,40px);margin-top:6px">${rs.length>1?esc(rs[0].p.name)+' wins':'Dive complete'}</h2><p style="margin:6px 0 0;opacity:.85">${rs[0].p.score.toLocaleString('en-US')} points</p></div>
@@ -388,10 +519,10 @@ function renderFinal(){const rs=ranked();ls.del('deepdive');
  ${rs.length>3?`<div class="board">${rs.slice(3).map((r,j)=>`<div class="brow" style="animation-delay:${.8+j*.08}s"><span class="r">${j+4}</span>${av(r.p)}<div class="n"><b>${esc(r.p.name)}</b></div><div class="s">${r.p.score.toLocaleString('en-US')}</div></div>`).join('')}</div>`:''}
  ${rs.length===1?`<div class="panel" style="text-align:center;margin:24px 0"><div class="muted">Your score</div><div style="font-size:44px;font-weight:700">${rs[0].p.score.toLocaleString('en-US')}</div><div class="muted" style="font-size:13px">out of a possible 11,250</div></div>`:''}
  <div class="spacer"></div>
- <div class="actions"><button class="btn primary wide" data-a="again">Play again</button><button class="btn soft wide" data-a="home">Change players</button></div></div>`;}
+ <div class="actions">${isOnline()?(isHost?'<button class="btn primary wide" data-a="again">Play again</button>':'')+'<button class="btn soft wide" data-a="leave">Leave room</button>':'<button class="btn primary wide" data-a="again">Play again</button><button class="btn soft wide" data-a="home">Change players</button>'}</div></div>`;}
 
 /* ---------- events ---------- */
-document.addEventListener('input',e=>{const i=e.target.dataset&&e.target.dataset.i;if(setup&&e.target.classList.contains('in')&&i!=null)setup.players[+i].name=e.target.value;});
+document.addEventListener('input',e=>{if(e.target.id==='ocode'){e.target.value=e.target.value.toUpperCase().replace(/[^A-Z]/g,'');return;}const i=e.target.dataset&&e.target.dataset.i;if(setup&&e.target.classList.contains('in')&&i!=null)setup.players[+i].name=e.target.value;});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||b.disabled)return;const a=b.dataset.a,i=b.dataset.i!=null?+b.dataset.i:null;
  switch(a){
  case 'add':if(setup.players.length<7){setup.players.push({name:'',piece:PK.find(k=>!setup.players.some(p=>p.piece===k))});renderHome();const ins=document.querySelectorAll('#plist .in');ins[ins.length-1].focus();}break;
@@ -401,13 +532,21 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
  case 'start':{const ps=setup.players.map((p,j)=>({name:(p.name||'').trim()||'Player '+(j+1),piece:p.piece}));
   ls.set('deepdive-names',JSON.stringify(setup.players.map((p,j)=>({name:(p.name||'').trim(),piece:p.piece}))));ls.set('deepdive-timer',String(setup.timer));startGame(ps,setup.timer);break;}
  case 'resume':try{G=JSON.parse(ls.get('deepdive'));if(G.s==='ask')G.s='pass';go();}catch(err){ls.del('deepdive');G=null;go();}break;
- case 'next':next();break;
+ case 'next':if(isOnline()){if(isHost)hostNext();}else next();break;
+ case 'ocreate':oCreate(b);break;
+ case 'ojoin':oJoin(b);break;
+ case 'leave':leaveOnline();break;
+ case 'ostart':if(isHost&&G.players.length>=2){ls.set('deepdive-timer',String(G.timer));hostStartGame();}break;
+ case 'otimer':if(isHost){G.timer=+b.dataset.v;hostCommit();}break;
+ case 'opiece':{const me=myIdx();if(me<0)break;const used=G.players.map(p=>p.piece);let k=PK.indexOf(G.players[me].piece);for(let n=0;n<PK.length;n++){k=(k+1)%PK.length;if(!used.includes(PK[k]))break;}if(isHost){G.players[me].piece=PK[k];hostCommit();}else if(conn&&conn.open){conn.send({k:'piece',p:PK[k]});}buzz(6);break;}
+ case 'opick':{if(mineLocked())break;oSel=i;document.querySelectorAll('#oopts .opt').forEach(o=>{const on=+o.dataset.i===i;o.classList.toggle('sel',on);o.setAttribute('aria-checked',on);});const lb=$('#lockbtn');if(lb)lb.disabled=false;buzz(5);break;}
+ case 'olock':{if(oSel==null||mineLocked())break;oLocked=true;const key=G.lv+'-'+G.qi;buzz(15);if(isHost)hostAns(myIdx(),oSel,key);else if(conn&&conn.open)conn.send({k:'ans',c:oSel,key:key});updateLockStrip();break;}
  case 'ready':G.s='ask';save();go();break;
  case 'pick':{sel=i;document.querySelectorAll('.opt').forEach(o=>{const on=+o.dataset.i===i;o.classList.toggle('sel',on);o.setAttribute('aria-checked',on);});$('#lockbtn').disabled=false;buzz(5);break;}
  case 'lock':if(sel!=null)lock(sel,false);break;
  case 'exit':if(!exitArm){exitArm=true;b.textContent='Tap again to exit';setTimeout(()=>{exitArm=false;if(b.isConnected)b.textContent='Exit';},2500);return;}
-  cancelAnimationFrame(raf);if(G&&G.s==='ask'){G.s='pass';save();}G=null;setup=newSetup();go();break;
- case 'again':{const ps=G.players.map(p=>({name:p.name,piece:p.piece}));startGame(ps,G.timer);break;}
+  cancelAnimationFrame(raf);if(isOnline()){leaveOnline();break;}if(G&&G.s==='ask'){G.s='pass';save();}G=null;setup=newSetup();go();break;
+ case 'again':if(isOnline()){if(isHost)hostStartGame();break;}{const ps=G.players.map(p=>({name:p.name,piece:p.piece}));startGame(ps,G.timer);break;}
  case 'home':G=null;setup=newSetup();go();break;
  }});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G&&G.s!=='ask')save();});
