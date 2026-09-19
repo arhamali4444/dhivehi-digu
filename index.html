@@ -187,6 +187,14 @@ label.f{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
 .meld{display:flex}
 .meld .card{--w:var(--sw);position:relative;animation:pop .45s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(.75s + var(--g)*.14s + var(--i)*.05s)}
 .meld .card+.card{margin-left:calc(var(--sw)*-.52)}
+.reveal{margin:14px 0 2px;text-align:left}
+.rvp{margin:8px 0 0}
+.rvp .nm2{font-size:12px;color:var(--muted);margin:0 0 5px}
+.rvrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-start}
+.rvg{display:flex}
+.rvg .card{--w:calc(var(--sw)*.8);position:relative}
+.rvg .card+.card{margin-left:calc(var(--w)*-.52)}
+.rvg.dead{opacity:.62}
 @keyframes pop{from{transform:translateY(16px) rotate(-8deg);opacity:0}}
 .scores{margin:16px 0;text-align:left}
 .srow{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:7px 0}
@@ -591,11 +599,11 @@ function pluck(t,m,v){const o=ctx.createOscillator(),g=ctx.createGain();o.type='
 g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+1.8);o.connect(g);g.connect(master);g.connect(fx);o.start(t);o.stop(t+1.9);}
 function pad(t,notes,dur){notes.forEach(m=>{const o=ctx.createOscillator(),g=ctx.createGain(),lp=ctx.createBiquadFilter();o.type='triangle';o.frequency.value=f(m);o.detune.value=Math.random()*10-5;lp.type='lowpass';lp.frequency.value=700;
 g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(.02,t+2);g.gain.setValueAtTime(.02,t+dur-1.6);g.gain.linearRampToValueAtTime(.0001,t+dur);o.connect(lp);lp.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.1);});}
-function sched(){if(!ctx||ctx.state!=='running'||document.hidden)return;if(nextT<ctx.currentTime-.2)nextT=ctx.currentTime+.05;while(nextT<ctx.currentTime+.3){const s=step%16,bar=Math.floor(step/16);
+function sched(){if(!ctx||ctx.state!=='running'||document.hidden)return;if(nextT<ctx.currentTime-.2)nextT=ctx.currentTime+.05;while(nextT<ctx.currentTime+.9){const s=step%16,bar=Math.floor(step/16);
 if(s===0&&bar%2===0)heartbeat(nextT,.1);
 if((s%4===0&&Math.random()<.42)||(s%4===2&&Math.random()<.1)){mel=Math.max(0,Math.min(SCALE.length-1,mel+[-2,-1,-1,0,1,1,2][Math.floor(Math.random()*7)]));pluck(nextT,SCALE[mel],.05);}
 if(s===0&&bar%2===0)pad(nextT,CH[(bar/2)%4],SPB*32);nextT+=SPB;step++;}}
-function run(){clearInterval(timer);timer=null;if(!on||!ctx||document.hidden)return;nextT=ctx.currentTime+.1;timer=setInterval(sched,60);}
+function run(){clearInterval(timer);timer=null;if(!on||!ctx||document.hidden)return;nextT=ctx.currentTime+.1;timer=setInterval(sched,250);sched();}
 function set(v){if(v&&!ctx&&!init())return false;on=v;
 if(on){AU.wake();run();master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setTargetAtTime(.3,ctx.currentTime,.8);}
 else if(ctx){master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setTargetAtTime(0,ctx.currentTime,.2);setTimeout(()=>{if(!on){clearInterval(timer);timer=null;}},900);}
@@ -604,7 +612,7 @@ return{get on(){return on;},set:set,pause(){clearInterval(timer);timer=null;},re
 
 /* ---------- melds (memoised: bots and gin checks reuse results) ---------- */
 const MEMO=new Map();
-function memo(k,fn){if(MEMO.has(k))return MEMO.get(k);if(MEMO.size>40000)MEMO.clear();const v=fn();MEMO.set(k,v);return v;}
+function memo(k,fn){if(MEMO.has(k))return MEMO.get(k);if(MEMO.size>6000)MEMO.clear();const v=fn();MEMO.set(k,v);return v;}
 const idsKey=ps=>ps.map(p=>p.c).join('|');
 const sortP=ps=>ps.sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:a.r-b.r);
 function cover(cards){return coverP(sortP(cards.map(P)));}
@@ -612,7 +620,7 @@ function coverP(ps){if(!ps.length)return[];if(ps.length<3)return null;return mem
 function coverRaw(ps){
 const f=ps[0],rest=ps.slice(1);
 const run=[f];let pool=rest.slice();
-for(let r=f.r+1;r<=13;r++){const j=pool.findIndex(p=>p.s===f.s&&p.r===r);if(j<0)break;run.push(pool[j]);pool=pool.slice(0,j).concat(pool.slice(j+1));
+if(f.r!==1)for(let r=f.r+1;r<=13;r++){const j=pool.findIndex(p=>p.s===f.s&&p.r===r);if(j<0)break;run.push(pool[j]);pool=pool.slice(0,j).concat(pool.slice(j+1));
 if(run.length>=3){const sub=coverP(pool);if(sub)return[run.map(p=>p.c)].concat(sub);}}
 const same=rest.filter(p=>p.r===f.r),others=rest.filter(p=>p.r!==f.r),n=same.length;
 for(let m=1;m<(1<<n);m++){const pick=[],leave=[];for(let i=0;i<n;i++)((m>>i)&1?pick:leave).push(same[i]);if(pick.length<2)continue;
@@ -625,7 +633,7 @@ function goP(ps){if(ps.length<3)return{n:0,m:[]};return memo('v'+idsKey(ps),()=>
 function goRaw(ps){
 const f=ps[0],rest=ps.slice(1);let best=goP(rest);
 const run=[f];let pool=rest.slice(),rv=cardVal(f.c);
-for(let r=f.r+1;r<=13;r++){const j=pool.findIndex(p=>p.s===f.s&&p.r===r);if(j<0)break;run.push(pool[j]);rv+=cardVal(pool[j].c);pool=pool.slice(0,j).concat(pool.slice(j+1));
+if(f.r!==1)for(let r=f.r+1;r<=13;r++){const j=pool.findIndex(p=>p.s===f.s&&p.r===r);if(j<0)break;run.push(pool[j]);rv+=cardVal(pool[j].c);pool=pool.slice(0,j).concat(pool.slice(j+1));
 if(run.length>=3){const sub=goP(pool);if(rv+sub.n>best.n)best={n:rv+sub.n,m:[run.map(p=>p.c)].concat(sub.m)};}}
 const same=rest.filter(p=>p.r===f.r),others=rest.filter(p=>p.r!==f.r),k=same.length;
 for(let m=1;m<(1<<k);m++){const pick=[],leave=[];for(let i=0;i<k;i++)((m>>i)&1?pick:leave).push(same[i]);if(pick.length<2)continue;
@@ -646,13 +654,16 @@ const canDiscard=()=>S&&S.status==='playing'&&S.turn===meIdx()&&S.phase==='disca
 function deal(N){if(!N.gid||!N.handNo)N.gid=Math.random().toString(36).slice(2,10);const n=N.players.length,decks=n<=2?1:2;const deck=[];
 for(let d=0;d<decks;d++)for(const s of SUITS)for(let r=1;r<=13;r++)deck.push(r+'-'+s+'-'+d);shuffle(deck);
 N.dealer=((typeof N.dealer==='number'?N.dealer:-1)+1)%n;N.hands={};N.players.forEach(p=>{N.hands[p.id]=deck.splice(0,10);});
-N.discard=[deck.pop()];N.stock=deck;N.turn=(N.dealer+1)%n;N.phase='draw';N.took=null;N.result=null;N.status='playing';
+N.discard=[deck.pop()];N.stock=decks>1?deck.slice(0,30+Math.max(0,n-3)*3):deck;N.turn=(N.dealer+1)%n;N.phase='draw';N.took=null;N.result=null;N.status='playing';
 N.ginDown=null;N.handNo=(N.handNo||0)+1;N.move={seq:(N.move?N.move.seq:0)+1,t:'deal',p:-1,c:null};}
 function mv(N,t,c){N.move={seq:(N.move?N.move.seq:0)+1,t:t,p:N.turn,c:c};}
 function win(N,big){const w=N.turn,bonus=big?BIG:GIN;
 const rows=N.players.map((p,k)=>{const hs=handScore(N.hands[p.id]||[]);const b=k===w?bonus:0;const total=hs.plus-hs.minus+b;p.score+=total;return{plus:hs.plus,minus:hs.minus,bonus:b,total:total};});
 let champ=0;N.players.forEach((p,k)=>{if(p.score>N.players[champ].score)champ=k;});
-N.result={w:w,big:big,pts:rows[w].total,bonus:bonus,rows:rows,champ:champ,melds:(cover(N.hands[N.players[w].id])||[]).map(m=>m.join(','))};
+const lay=N.players.map((p,k)=>{const h=(N.hands[p.id]||[]).slice();
+const ms=(k===w?cover(h):null)||partial(h);const used=new Set();ms.forEach(m=>m.forEach(c=>used.add(c)));
+return{m:ms.map(m=>m.join(',')),d:h.filter(c=>!used.has(c))};});
+N.result={w:w,big:big,pts:rows[w].total,bonus:bonus,rows:rows,champ:champ,lay:lay,melds:lay[w].m};
 N.status=N.players[champ].score>=TARGET?'over':'handover';N.phase='done';}
 function drawFor(N){const h=N.hands[N.players[N.turn].id];
 if(!N.stock.length){const top=N.discard.pop();N.stock=shuffle(N.discard);N.discard=top?[top]:[];}
@@ -685,7 +696,8 @@ else return;
 N.rev=(S.rev||0)+1;N.by=myId;commit(N);}
 let soloSaveT=null;
 function commit(N){apply(N);if(mode==='solo'){clearTimeout(soloSaveT);if(N.status==='over')ls.del('lg-solo');else soloSaveT=setTimeout(()=>{if(mode==='solo'&&S)ls.set('lg-solo',JSON.stringify(S));},400);scheduleBot();}if(mode==='p2p'&&isHost)broadcast();if(ref){const snap=N;writeQ=writeQ.then(()=>ref.set(snap)).catch(e=>toast(errMsg(e)));}}
-function apply(N){const prev=S;const before=snapRects();S=N;draw();animate(prev,N,before);}
+function willAnim(prev,N){return !(screen!=='table'||!prev||!N.move||!prev.move||prev.status==='lobby'||N.handNo!==prev.handNo||N.move.seq===prev.move.seq);}
+function apply(N){const prev=S;const anim=willAnim(prev,N);const before=anim?snapRects():null;S=N;draw();if(anim)animate(prev,N,before);}
 function errMsg(e){if(e&&e.code==='quota_exceeded')return 'Table storage is full. Try again later.';if(e&&e.code==='resource_exhausted')return 'Too many moves at once. Wait a moment.';return 'Couldn’t reach the table. Check your connection.';}
 let tt;function toast(m,ms){const el=$('#toast');el.textContent=m;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),ms||2800);}
 
@@ -783,7 +795,7 @@ app.innerHTML=`<main class="page">
 </main>`;}
 function setQuickText(t){const e=$('#qtext');if(e)e.textContent=t;}
 function openHowTo(){sheet(`<div class="grab"></div><h2>How to play</h2><div class="rules">
-<p>Draw from the stock or take the top discard, then discard one card. Go gin when your remaining 10 cards all sit in melds: 3 or more of a rank, or 3 or more in a row of one suit. Aces are low.</p>
+<p>Draw from the stock or take the top discard, then discard one card. Go gin when your remaining 10 cards all sit in melds: 3 or more of a rank, or 3 or more in a row of one suit. Aces are worth 15 and only count in a three of a kind, never in a run.</p>
 <p>When a hand ends, everyone adds up their melded cards and subtracts the cards left out. Aces are 15, J, Q and K are 10, every other card is its number. The player who goes gin gets ${GIN} extra, or ${BIG} for big gin (all 11 cards meld right after you draw). First to ${TARGET} wins.</p>
 <p>Tap a card to lift it, then tap Discard or the discard pile. You can also drag it onto the pile. Tap 😊 during a game to send a reaction.</p></div>
 <div class="row"><button class="btn primary" data-a="close">Got it</button></div>`);}
@@ -961,6 +973,11 @@ function scoresHTML(){const ps=S.players.map((p,k)=>({p:p,k:k})).sort((a,b)=>b.p
 return `<div class="scores">${ps.map(({p,k})=>`<div class="srow"><span class="mini">${pieceHTML(pieceOf(p,k),PC[k])}</span><div class="n"><span>${esc(p.name)}${p.id===myId?' (you)':''}</span><div class="bar"><i style="--c:${PC[k]};width:${Math.max(0,Math.min(100,p.score/TARGET*100))}%"></i></div></div><b>${p.score}</b></div>`).join('')}</div>`;}
 function handRowsHTML(r){const rows=S.players.map((p,k)=>({p:p,k:k,x:r.rows[k]})).filter(o=>o.x).sort((a,b)=>b.x.total-a.x.total);
 return `<div class="hands"><div class="hhead"><span></span><span>This hand</span><span>Melded</span><span>Left out</span><span>Total</span></div>${rows.map(({p,k,x})=>`<div class="hrow"><span class="mini">${pieceHTML(pieceOf(p,k),PC[k])}</span><span class="hn">${esc(p.name)}${x.bonus?`<small>${r.big?'Big gin':'Gin'} +${x.bonus}</small>`:''}</span><span class="hp">+${x.plus}</span><span class="hm">−${x.minus}</span><b class="${x.total<0?'neg':''}">${fmt(x.total)}</b></div>`).join('')}</div>`;}
+function revealHTML(r){if(!r.lay)return '';
+const others=S.players.map((p,k)=>({p:p,k:k,l:r.lay[k]})).filter(o=>o.l&&o.k!==r.w&&(o.l.m.length||o.l.d.length));
+if(!others.length)return '';
+const grp=cards=>cards.map(c=>`<div class="card">${faceHTML(c)}</div>`).join('');
+return `<div class="reveal"><div class="muted totlbl">Final hands</div>${others.map(o=>`<div class="rvp"><div class="nm2">${esc(o.p.name)}${o.p.id===myId?' (you)':''}</div><div class="rvrow">${o.l.m.map(m=>`<div class="rvg">${grp(m.split(','))}</div>`).join('')}${o.l.d.length?`<div class="rvg dead">${grp(o.l.d)}</div>`:''}</div></div>`).join('')}</div>`;}
 function renderOv(){const o=$('#ov');
 if(S.status!=='handover'&&S.status!=='over'){if(o._k)closeOv();return;}
 const k=S.status+S.handNo;if(o._k===k)return;o._k=k;const aw=awardHand();
@@ -971,6 +988,7 @@ o.innerHTML=`<div class="ovc"><span class="mini">${pieceHTML(pieceOf(cp,ci),PC[c
 <div class="pts">${over?esc(w.name)+' went '+(r.big?'big gin':'gin')+', ':''}${fmt(r.pts)} points this hand</div>${aw?`<div class="earn">+${aw.sh} 🐚 and +${aw.xp} XP${aw.capped?' (daily shell limit reached)':''}</div>`:''}
 <div class="melds">${r.melds.map((m,gi)=>`<div class="meld">${m.split(',').map((c,ci)=>`<div class="card" style="--g:${gi};--i:${ci}">${faceHTML(c)}</div>`).join('')}</div>`).join('')}</div>
 ${r.rows?handRowsHTML(r):''}
+${revealHTML(r)}
 <div class="muted totlbl">Game total</div>
 ${scoresHTML()}
 ${meIdx()>=0?`<button class="btn primary wide" data-a="${over?'again':'next'}">${over?'Play again':'Deal next hand'}</button>`:''}
@@ -1134,7 +1152,7 @@ const myCos=()=>({f:equippedId('frame'),t:equippedId('title'),g:INV.stats.games,
 function validCos(c){c=c||{};const ok=(id,cat)=>BYID[id]&&BYID[id].cat===cat;return{f:ok(c.f,'frame')?c.f:'f-classic',t:ok(c.t,'title')?c.t:'t-rookie',g:Math.max(0,Math.min(1e6,c.g|0)),w:Math.max(0,Math.min(1e6,c.w|0))};}
 function frameCls(p){const f=p&&p.cos&&p.cos.f;return f&&f!=='f-classic'&&BYID[f]?' fr-'+f.slice(2):'';}
 function avatarHTML(p,k,extra){return `<span class="mini frm${frameCls(p)}${extra?' '+extra:''}">${pieceHTML(pieceOf(p,k),PC[k%PC.length])}</span>`;}
-const autoSmooth=!!((navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=2)||(navigator.deviceMemory&&navigator.deviceMemory<=2));
+const autoSmooth=!!((navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||(navigator.deviceMemory&&navigator.deviceMemory<=4));
 const isSmooth=()=>{const v=ls.get('dd-smooth');return v==='1'?true:v==='0'?false:(autoSmooth||reduce);};
 function applyCosmetics(){const h=document.documentElement;h.dataset.deck=equippedId('deck');h.classList.toggle('smooth',isSmooth());BACK=null;}
 function offTable(){delete document.documentElement.dataset.tbl;}
@@ -1316,7 +1334,7 @@ function closeChat(){const b=$('#chatbar');if(b)b.hidden=true;const i=$('#chatin
 function renderChatLog(){const e=$('#chatlog');if(!e||!S)return;e.innerHTML='';chatLog.slice(-4).forEach(c=>{const p=document.createElement('p');const n=document.createElement('b');n.textContent=(c.pid===myId?'You':c.name)+': ';p.appendChild(n);p.appendChild(document.createTextNode(c.m));e.appendChild(p);});}
 function sendChat(raw){if(!S||mode!=='p2p'||meIdx()<0||chatOff())return;const m=cleanText(raw);if(!m)return;
 const now=Date.now();if(now-lastChat<CHAT_CD){toast('Slow down a little.');return;}lastChat=now;
-const i=$('#chatin');if(i){i.value='';i.blur();}
+const i=$('#chatin');if(i)i.value='';closeChat();
 receiveChat(myId,m);if(isHost)relayChat(myId,m,true);else joinSend({k:'chat',m:m});}
 function relayChat(pid,raw,self){const n=net;if(!n||n.role!=='host'||!S)return;const m=cleanText(raw);if(!m)return;
 if(!self){const now=Date.now();if(now-(chatT[pid]||0)<2000)return;chatT[pid]=now;receiveChat(pid,m);}
