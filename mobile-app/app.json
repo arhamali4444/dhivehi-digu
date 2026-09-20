@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Dhivehi Digu",
+    "slug": "dhivehi-digu",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.arhamali4444.dhivehidigu"
+    },
+    "android": {
+      "package": "com.arhamali4444.dhivehidigu"
+    }
+  }
+}
