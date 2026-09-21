@@ -560,12 +560,32 @@ async function initFirebase(){try{
   const cred=await U.signInAnonymously(auth); FB.user=cred.user; FB.ready=true;
   await fbLoadAndMerge();
 }catch(e){console.warn('Firebase unavailable; local save still works',e);}}
-async function loadWinsLeaderboard(){const box=document.getElementById('wins-board');if(!box)return;
-  if(!FB.ready){box.innerHTML='<p class="muted">Connecting to leaderboard…</p>';setTimeout(loadWinsLeaderboard,900);return;}
-  try{const q=FB.query(FB.collection(FB.db,'players'),FB.orderBy('wins','desc'),FB.limit(10));const ss=await FB.getDocs(q);let n=0,html='';
-    ss.forEach(d=>{const x=d.data()||{};n++;html+=`<div class="eqrow"><span><small>#${n}</small>${esc(x.name||'Digu Player')}</span><b>${x.wins|0} wins</b></div>`;});
-    box.innerHTML=html||'<p class="muted">No wins recorded yet.</p>';
-  }catch(e){box.innerHTML='<p class="muted">Leaderboard will appear after Firestore rules are published.</p>';}}
+async function loadWinsLeaderboard(){
+  const boxes=[...document.querySelectorAll('[data-wins-board],#wins-board')];
+  if(!boxes.length)return;
+  if(!FB.ready){
+    boxes.forEach(box=>box.innerHTML='<p class="muted">Connecting to leaderboard…</p>');
+    setTimeout(loadWinsLeaderboard,900);return;
+  }
+  try{
+    const q=FB.query(FB.collection(FB.db,'players'),FB.orderBy('wins','desc'),FB.limit(10));
+    const ss=await FB.getDocs(q),players=[];
+    ss.forEach(d=>players.push(d.data()||{}));
+    boxes.forEach(box=>{
+      const compact=box.dataset.compact==='1', rows=compact?players.slice(0,3):players;
+      if(!rows.length){box.innerHTML='<p class="muted">No wins recorded yet.</p>';return;}
+      box.innerHTML=rows.map((x,i)=>{
+        const games=x.games|0,wins=x.wins|0,rate=games?Math.round(wins/games*100):0;
+        const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+        return compact
+          ? `<div class="eqrow"><span><small>${medal}</small>${esc(x.name||'Digu Player')}</span><b>${wins} wins</b></div>`
+          : `<div class="eqrow"><span><small>${medal} · ${games} games · ${rate}% win rate</small>${esc(x.name||'Digu Player')}</span><b>${wins} wins</b></div>`;
+      }).join('');
+    });
+  }catch(e){
+    boxes.forEach(box=>box.innerHTML='<p class="muted">Leaderboard unavailable right now.</p>');
+  }
+}
 
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 const P=c=>{const a=c.split('-');return{c:c,r:+a[0],s:a[1]};};
@@ -816,7 +836,8 @@ ${db?'':srvHTML()}
 ${storeBannerHTML()}
 ${sponsorPanelHTML()}
 <button class="btn ghost wide howbtn" data-a="howto">How to play</button>
-</main>`;warmUp();}
+<section class="panel" style="margin-top:18px"><h2>🏆 Most Wins</h2><div data-wins-board data-compact="1"><p class="muted">Loading leaderboard…</p></div><p class="muted" style="font-size:11px;margin:10px 0 0;text-align:center">Top 3 players by total wins</p></section>
+</main>`;warmUp();setTimeout(loadWinsLeaderboard,0);}
 function renderFriends(){
 screen='friends';offTable();closeOv();const last=ls.get('lg-room');
 app.innerHTML=`<main class="page">
@@ -1344,7 +1365,7 @@ app.innerHTML=`<main class="page">
 <section class="panel"><h2>Equipped</h2>${CATS.filter(c=>c[0]!=='emote').map(([c,n])=>`<div class="eqrow"><span><small>${n.replace(/s$/,'')}</small>${esc(BYID[equippedId(c)].name)}</span><button class="btn soft sm" data-a="stab" data-c="${c}">Change</button></div>`).join('')}</section>
 <section class="panel"><h2>Stats</h2><div class="stats">${[[st.games,'Games'],[st.wins,'Wins'],[st.hands,'Hands'],[st.gins,'Gins'],[st.big,'Big gins'],[st.online,'Online games']].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div><p class="muted" style="font-size:12px;margin:10px 0 0">Best hand: ${st.best==null?'none yet':fmt(st.best)+' points'}</p></section>
 <section class="panel"><h2>Badges</h2><div class="badges">${badges.map(([ic,n,ok])=>`<div class="bdg${ok?'':' off'}"><i>${ic}</i>${n}</div>`).join('')}</div></section>
-<section class="panel"><h2>🏆 Most Wins</h2><div id="wins-board"><p class="muted">Loading leaderboard…</p></div></section>
+<section class="panel"><h2>🏆 Most Wins</h2><div id="wins-board" data-wins-board><p class="muted">Loading leaderboard…</p></div></section>
 <section class="panel"><h2>Unlock history</h2>${INV.hist.slice(0,10).map(h=>`<p class="hist"><b>${esc(h.id==='welcome'?'Welcome gift':h.id==='refund'?'Refund for retired designs':(BYID[h.id]?BYID[h.id].name:h.id))}</b> ${how(h)}, ${fmtDate(h.t)}</p>`).join('')||'<p class="muted">Nothing yet.</p>'}</section>
 <section class="panel"><h2>Settings</h2><div class="row"><button class="btn soft" data-a="smoothToggle" aria-pressed="${isSmooth()}">Smooth mode: ${isSmooth()?'On':'Off'}</button></div><p class="muted" style="font-size:12px;margin:8px 0 0">Turns off moving backgrounds, animated frames and effects. It switches on by itself on slower phones.</p></section>
 <p class="snote">Your XP and game stats sync to your permanent Digu player profile when Firebase is available.</p>
