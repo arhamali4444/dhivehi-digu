@@ -631,10 +631,18 @@ const ADMIN_NAME='dangerous';
 const ADMIN_TEST_SHELLS=100000;
 function isAdminUser(){return !!(FB.user && FB.user.uid===ADMIN_UID);}
 function applyAdminTestAccount(){
-  if(!isAdminUser()) return;
-  INV.shells=Math.max(INV.shells|0,ADMIN_TEST_SHELLS);
+  if(!isAdminUser()) return false;
+  INV.shells=Math.max(Number(INV.shells)||0,ADMIN_TEST_SHELLS);
   ls.set('lg-name',ADMIN_NAME);
   ls.set('dd-inv',JSON.stringify(INV));
+  try{
+    if(typeof updateShells==='function') updateShells();
+    if(typeof updateShellCount==='function') updateShellCount();
+    if(typeof renderShells==='function') renderShells();
+    if(typeof updateStore==='function') updateStore();
+    if(typeof renderStore==='function') renderStore();
+  }catch(e){}
+  return true;
 }
 
 let fbSaveTimer=null;
@@ -934,14 +942,19 @@ function draw(){if(!S){renderHome();return;}if(S.status==='lobby'){renderLobby()
 function heroFan(){const cs=[['back',-16,-78],['1-H-0',0,-40],['13-S-0',16,-2]];
 return `<div class="fan" aria-hidden="true">${cs.map(([c,r,x])=>`<div class="card" style="transform:translate(calc(${x}px - 10px),0) rotate(${r}deg)">${c==='back'?backHTML():faceHTML(c)}</div>`).join('')}</div>`;}
 function authIsGuest(){return !FB.user||FB.user.isAnonymous;}
+function rememberedLoginEmail(){return ls.get('dd-login-email')||'';}
+function rememberLoginEmail(v){v?ls.set('dd-login-email',v):ls.del('dd-login-email');}
+
 function openAccount(){
- const guest=authIsGuest();
- sheet(`<div class="grab"></div><h2>${guest?'Login or Register':'Your Account'}</h2>
- ${guest?`<p class="muted" style="margin:0 0 12px">Create an account to keep your Dhivehi Digu profile connected to you.</p>
- <input class="in" id="authEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;margin-bottom:10px">
+ const guest=authIsGuest(),savedEmail=rememberedLoginEmail();
+ sheet(`<div class="grab"></div><h2>${guest?'Login or Register':'Account'}</h2>
+ ${guest?`<p class="muted" style="margin:0 0 12px">Login to your Dhivehi Digu profile or create a new one.</p>
+ <input class="in" id="authEmail" type="email" value="${esc(savedEmail)}" placeholder="Email" autocomplete="email" style="width:100%;margin-bottom:10px">
  <input class="in" id="authPass" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" style="width:100%;margin-bottom:10px">
+ <label style="display:flex;gap:9px;align-items:center;margin:2px 0 14px;font-size:13px"><input id="authRemember" type="checkbox" ${savedEmail?'checked':''}> Remember my email on this device</label>
  <div class="row"><button class="btn primary" data-a="authLogin">Login</button><button class="btn soft" data-a="authRegister">Register</button></div>`:
- `<p class="muted" style="margin:0 0 12px">Signed in as <b>${esc(FB.user.email||'Digu Player')}</b></p><button class="btn soft wide" data-a="authLogout">Log out</button>`}
+ `<p class="muted" style="margin:0 0 12px">Signed in as <b>${esc(FB.user.email||myName()||'Digu Player')}</b></p>
+ <button class="btn soft wide" data-a="authLogout">Log out</button>`}
  <div class="row"><button class="btn ghost" data-a="close">Close</button></div>`);
 }
 async function authDo(kind){
@@ -950,14 +963,17 @@ async function authDo(kind){
  if(!email||pass.length<6){toast('Enter your email and a password with at least 6 characters.');return;}
  try{
    const cred=kind==='register'?await FB.createUserWithEmailAndPassword(FB.auth,email,pass):await FB.signInWithEmailAndPassword(FB.auth,email,pass);
-   FB.user=cred.user; await fbLoadAndMerge(); closeSheet(); toast(kind==='register'?'Account created ✓':'Logged in ✓'); renderHome();
+   FB.user=cred.user;
+   const remember=!!(($('#authRemember')||{}).checked);
+   remember?rememberLoginEmail(email):rememberLoginEmail('');
+   await fbLoadAndMerge(); closeSheet(); toast(kind==='register'?'Account created ✓':'Logged in ✓'); renderHome();
  }catch(e){toast((e&&e.message?e.message:'Could not sign in').replace('Firebase: ','').replace(/\s*\(auth\/[^)]+\)\.?/,'').trim(),5000);}
 }
-async function authLogout(){try{await FB.signOut(FB.auth);const U=await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js');const cred=await U.signInAnonymously(FB.auth);FB.user=cred.user;closeSheet();toast('Logged out');renderHome();}catch(e){toast('Could not log out.');}}
+async function authLogout(){try{await FB.signOut(FB.auth);const U=await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js');const cred=await U.signInAnonymously(FB.auth);FB.user=cred.user;closeSheet();toast('Logged out');renderProfile();}catch(e){toast('Could not log out.');}}
 function renderHome(){
 screen='home';offTable();closeOv();const nm=myName();
 app.innerHTML=`<main class="page">
-<div class="hometop"><button class="profbtn" data-a="profile" aria-label="Your profile">${avatarHTML({piece:myPiece(),cos:myCos()},0)}<span class="pn">${nm?esc(nm):'Set your name'}</span></button><div class="right"><button class="btn soft sm" data-a="account">${FB.ready&&!authIsGuest()?'Account':'Login / Register'}</button><button class="shellpill" data-a="goStore" aria-label="Store, ${INV.shells} shells">🐚 ${INV.shells}</button><button class="icon-btn" data-a="goStore" aria-label="Store" style="font-size:19px">🛍️</button><button class="icon-btn musicbtn" data-a="music" aria-label="Background music" aria-pressed="${Music.on}">${ICON.music}</button></div></div>
+<div class="hometop"><button class="profbtn" data-a="profile" aria-label="Your profile">${avatarHTML({piece:myPiece(),cos:myCos()},0)}<span class="pn">${nm?esc(nm):'Set your name'}</span></button><div class="right">${authIsGuest()?'<button class="btn soft sm" data-a="account">Login / Register</button>':''}<button class="shellpill" data-a="goStore" aria-label="Store, ${INV.shells} shells">🐚 ${INV.shells}</button><button class="icon-btn" data-a="goStore" aria-label="Store" style="font-size:19px">🛍️</button><button class="icon-btn musicbtn" data-a="music" aria-label="Background music" aria-pressed="${Music.on}">${ICON.music}</button></div></div>
 <section class="hero">${heroFan()}<h1>DHIVEHI<br>DIGU</h1><svg class="wave" viewBox="0 0 90 12" aria-hidden="true"><path d="M2 8c10-6 20 4 30-1s20-5 30 0 18 3 26-2" fill="none" stroke="#fff" stroke-width="1.5"/></svg><div class="tagl">Maldives</div><p class="motto">Can You Dig It?</p>${poweredHTML()}</section>
 <section class="modes">
 ${ls.get('lg-solo')?'<button class="btn soft wide" data-a="resumeSolo">Resume your game vs computer</button>':''}
@@ -1485,6 +1501,7 @@ app.innerHTML=`<main class="page">
 <section class="panel"><h2>Badges</h2><div class="badges">${badges.map(([ic,n,ok])=>`<div class="bdg${ok?'':' off'}"><i>${ic}</i>${n}</div>`).join('')}</div></section>
 <section class="panel"><h2>🏆 Most Wins</h2><div id="wins-board" data-wins-board><p class="muted">Loading leaderboard…</p></div></section>
 <section class="panel"><h2>Unlock history</h2>${INV.hist.slice(0,10).map(h=>`<p class="hist"><b>${esc(h.id==='welcome'?'Welcome gift':h.id==='refund'?'Refund for retired designs':(BYID[h.id]?BYID[h.id].name:h.id))}</b> ${how(h)}, ${fmtDate(h.t)}</p>`).join('')||'<p class="muted">Nothing yet.</p>'}</section>
+<section class="panel"><h2>Account</h2>${authIsGuest()?`<p class="muted" style="margin:0 0 10px">You're playing as a guest.</p><button class="btn primary wide" data-a="account">Login / Register</button>`:`<p class="muted" style="margin:0 0 10px">Signed in as <b>${esc(FB.user.email||'Digu Player')}</b></p><button class="btn soft wide" data-a="authLogout">Log out</button>`}</section>
 <section class="panel"><h2>Settings</h2><div class="row"><button class="btn soft" data-a="smoothToggle" aria-pressed="${isSmooth()}">Smooth mode: ${isSmooth()?'On':'Off'}</button></div><p class="muted" style="font-size:12px;margin:8px 0 0">Turns off moving backgrounds, animated frames and effects. It switches on by itself on slower phones.</p></section>
 <p class="snote">Your XP and game stats sync to your permanent Digu player profile when Firebase is available.</p>
 </main>`;setTimeout(loadWinsLeaderboard,0);}
