@@ -551,6 +551,18 @@ body.table-dhon #game::after{
 [data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13){background:#fff5e9!important;border:1px solid #d6b58f!important;box-shadow:inset 0 0 0 3px #fff5e9,inset 0 0 0 4px rgba(170,118,79,.35),0 2px 7px rgba(0,0,0,.14)!important}
 [data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13)::after{content:"";position:absolute;inset:7%;border:1px solid rgba(170,118,79,.28);border-radius:2px;pointer-events:none}
 </style>
+
+<style id="clean-legendary-number-suits">
+.cleanSuit{display:none}
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .bigsuit,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .bigsuit{display:none!important}
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .cleanSuit,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .cleanSuit{
+ display:block!important;position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+ font-family:Georgia,'Times New Roman',serif;font-size:calc(var(--w)*.58);line-height:1;
+ color:var(--sc);font-weight:400;z-index:2;
+}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -706,7 +718,7 @@ const FACE={};
 function faceHTML(c){const key=c.split('-').slice(0,2).join('-');if(FACE[key])return FACE[key];const p=P(c),s=p.s;let mid;
 if(p.r===1)mid=`<div class="acec">${sv(s)}</div>`;
 else if(p.r>10)mid=`<div class="courtf"><span class="sun"></span>${courtScene()}<svg class="mot" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${PIECES[COURT[p.r]].s}</svg><i class="cart"></i></div>`;
-else mid=sv(s,'bigsuit');
+else mid=sv(s,'bigsuit')+`<span class="cleanSuit">${SY[s]}</span>`;
 return FACE[key]=`<div class="face ${s} r${p.r}"><span class="ix tl"><b>${RL[p.r]}</b>${sv(s)}</span>${mid}<span class="ix br">${sv(s)}<b>${RL[p.r]}</b></span></div>`;}
 let BACK=null;
 const backHTML=()=>BACK||(BACK=backSVG(BYID[equippedId('back')]));
