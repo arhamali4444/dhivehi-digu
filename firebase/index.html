@@ -626,9 +626,20 @@ const FIREBASE_CONFIG={
   appId:"1:778464006205:web:7dce5d63707c6b2d0eda54"
 };
 let FB={ready:false,user:null,auth:null,db:null,doc:null,setDoc:null,getDoc:null,collection:null,query:null,orderBy:null,limit:null,getDocs:null,createUserWithEmailAndPassword:null,signInWithEmailAndPassword:null,signOut:null};
+const ADMIN_UID='mLOkxzQ7J0YC8z0auCKdv3HprJj2';
+const ADMIN_NAME='dangerous';
+const ADMIN_TEST_SHELLS=100000;
+function isAdminUser(){return !!(FB.user && FB.user.uid===ADMIN_UID);}
+function applyAdminTestAccount(){
+  if(!isAdminUser()) return;
+  INV.shells=Math.max(INV.shells|0,ADMIN_TEST_SHELLS);
+  ls.set('lg-name',ADMIN_NAME);
+  ls.set('dd-inv',JSON.stringify(INV));
+}
+
 let fbSaveTimer=null;
 function publicPlayerData(){return{
-  name:myName()||'Digu Player', xp:INV.xp|0, shells:INV.shells|0,
+  name:isAdminUser()?ADMIN_NAME:(myName()||'Digu Player'), xp:INV.xp|0, shells:INV.shells|0,
   games:INV.stats.games|0,wins:INV.stats.wins|0,hands:INV.stats.hands|0,
   gins:INV.stats.gins|0,big:INV.stats.big|0,online:INV.stats.online|0,
   best:INV.stats.best==null?null:INV.stats.best,
@@ -647,6 +658,7 @@ async function fbLoadAndMerge(){if(!FB.ready||!FB.user)return;try{
     if(d.best!=null&&(st.best==null||d.best>st.best))st.best=d.best;
     ls.set('dd-inv',JSON.stringify(INV));
   }
+  applyAdminTestAccount();
   await fbSaveNow();
   if(screen==='profile')renderProfile();
 }catch(e){console.warn('Firebase load failed',e);}}
