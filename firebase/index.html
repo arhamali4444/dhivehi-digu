@@ -565,66 +565,54 @@ body.table-dhon #game::after{
 </style>
 
 <style id="legendary-card-uniformity-fix">
-/* Legendary decks: keep every physical card/context size untouched.
-   Use one identical live corner index for 2–10, A, J, Q and K. */
-[data-deck="d-boli"] .face .ix.tl,
-[data-deck="d-dhon"] .face .ix.tl{
-  display:flex!important;
-  position:absolute!important;
-  top:4%!important;
-  left:5%!important;
-  width:calc(var(--w)*.34)!important;
-  flex-direction:column!important;
-  align-items:center!important;
-  z-index:30!important;
-  opacity:1!important;
-  visibility:visible!important;
-  background:transparent!important;
-}
-[data-deck="d-boli"] .face .ix.tl b,
-[data-deck="d-dhon"] .face .ix.tl b{
-  display:block!important;
-  font-family:var(--ixf,'DM Serif Display',Georgia,'Times New Roman',serif)!important;
-  font-size:calc(var(--w)*.42)!important;
-  line-height:.95!important;
-  font-weight:400!important;
-  letter-spacing:-.07em!important;
-  margin-left:-.07em!important;
-}
-[data-deck="d-boli"] .face .ix.tl svg,
-[data-deck="d-dhon"] .face .ix.tl svg{
-  display:block!important;
-  width:calc(var(--w)*.20)!important;
-  height:calc(var(--w)*.20)!important;
-  margin-top:calc(var(--w)*.03)!important;
-}
-[data-deck="d-boli"] .face .ix.br,
-[data-deck="d-dhon"] .face .ix.br{display:none!important}
+/* FINAL SAFE CARD FIX
+   Never alter card dimensions. Never paint white patches over artwork. */
 
-/* Number cards use one centered suit. A/J/Q/K keep their approved artwork. */
-[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .bigsuit,
-[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .bigsuit{display:none!important}
-[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .cleanSuit,
-[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .cleanSuit{
-  display:block!important;
-  position:absolute!important;
-  left:50%!important;
-  top:52%!important;
-  transform:translate(-50%,-50%)!important;
-  font-family:Georgia,'Times New Roman',serif!important;
-  font-size:calc(var(--w)*.58)!important;
-  line-height:1!important;
-  color:var(--sc)!important;
-  font-weight:400!important;
-  z-index:3!important;
+/* Number cards 2–10: one consistent corner index. */
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .ix.tl,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .ix.tl{
+  display:flex!important;position:absolute!important;top:4%!important;left:5%!important;
+  width:calc(var(--w)*.34)!important;flex-direction:column!important;align-items:center!important;
+  z-index:10!important;background:transparent!important;
 }
-/* Never cover any part of the special artwork. */
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .ix.tl b,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .ix.tl b{
+  display:block!important;font-family:var(--ixf,'DM Serif Display',Georgia,'Times New Roman',serif)!important;
+  font-size:calc(var(--w)*.42)!important;line-height:.95!important;font-weight:400!important;
+  letter-spacing:-.07em!important;margin-left:-.07em!important;
+}
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .ix.tl svg,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .ix.tl svg{
+  width:calc(var(--w)*.20)!important;height:calc(var(--w)*.20)!important;margin-top:calc(var(--w)*.03)!important;
+}
+[data-deck="d-boli"] .face .ix.br,[data-deck="d-dhon"] .face .ix.br{display:none!important}
+
+/* A/J/Q/K artwork already contains its own rank/suit.
+   Hide the extra HTML index so letters can never double. */
+[data-deck="d-boli"] .face.r1 .ix,[data-deck="d-boli"] .face.r11 .ix,
+[data-deck="d-boli"] .face.r12 .ix,[data-deck="d-boli"] .face.r13 .ix,
+[data-deck="d-dhon"] .face.r1 .ix,[data-deck="d-dhon"] .face.r11 .ix,
+[data-deck="d-dhon"] .face.r12 .ix,[data-deck="d-dhon"] .face.r13 .ix{
+  display:none!important;
+}
+
+/* Remove every experimental cover/patch from illustrated cards. */
 [data-deck="d-boli"] .face.r1::after,[data-deck="d-boli"] .face.r11::after,
 [data-deck="d-boli"] .face.r12::after,[data-deck="d-boli"] .face.r13::after,
 [data-deck="d-dhon"] .face.r1::after,[data-deck="d-dhon"] .face.r11::after,
 [data-deck="d-dhon"] .face.r12::after,[data-deck="d-dhon"] .face.r13::after{
-  content:none!important;
-  display:none!important;
+  content:none!important;display:none!important;
+}
+
+/* Number cards: exactly one centered suit. */
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .bigsuit,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .bigsuit{display:none!important}
+[data-deck="d-boli"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .cleanSuit,
+[data-deck="d-dhon"] .face:not(.r1):not(.r11):not(.r12):not(.r13) .cleanSuit{
+  display:block!important;position:absolute!important;left:50%!important;top:52%!important;
+  transform:translate(-50%,-50%)!important;font-family:Georgia,'Times New Roman',serif!important;
+  font-size:calc(var(--w)*.58)!important;line-height:1!important;color:var(--sc)!important;
+  font-weight:400!important;z-index:3!important;
 }
 </style>
 
