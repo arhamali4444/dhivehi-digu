@@ -610,6 +610,92 @@ html[data-tbl="t-boli"] .table :is(.topbar .icon-btn[data-a="menu"],.spon.ph){co
 <div class="fx" id="fx"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="sheet-b" id="sheetB"></div></div>
 <div class="toast" id="toast" role="status"></div>
+<style id="home-refresh">
+/* ---- home refresh ---- */
+.hometop .profbtn{max-width:62%;padding:5px 16px 5px 5px;background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.profbtn .pwrap{display:flex;flex-direction:column;min-width:0;line-height:1.15;text-align:left}
+.profbtn .ps{font-size:11px;font-weight:600;opacity:.85;white-space:nowrap}
+.shellpill{gap:6px;padding:0 13px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28)}
+.shellpill svg{width:17px;height:17px;color:#FFE3A8}
+.hero .wave path{stroke:#F2D49B}
+.hero .tagl{color:#FFF1D6}
+.mode{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(247,251,251,.94))}
+.mode .mi svg{width:24px;height:24px}
+.mode .mchev{margin-left:auto;display:grid;place-items:center;color:var(--muted);opacity:.7}
+.mode .mchev svg{width:20px;height:20px}
+.mode.quick{background:linear-gradient(135deg,#12909C 0%,#0B6C80 100%);box-shadow:0 10px 26px rgba(6,70,86,.35),inset 0 1px 0 rgba(255,255,255,.18);overflow:hidden}
+.mode.quick:after{content:"";position:absolute;right:-30px;top:-40px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 65%);pointer-events:none}
+.mode.quick .mi{background:rgba(255,255,255,.18);color:#FFE3A8}
+.mode.quick .mchev{color:#fff;opacity:.85}
+.mode.m-friends .mi{background:rgba(229,96,77,.13);color:#D4503E}
+.mode.m-friends{box-shadow:var(--shadow),inset 4px 0 0 #E5604D}
+.mode.m-bot .mi{background:rgba(232,178,50,.18);color:#B07F10}
+.mode.m-bot{box-shadow:var(--shadow),inset 4px 0 0 #E8B232}
+.howbtn{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,.12)}
+.howbtn svg{width:18px;height:18px}
+.lbh{display:flex;align-items:center;gap:10px}
+.lbi{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:rgba(232,178,50,.18);color:#B07F10}
+.lbi svg{width:19px;height:19px}
+.sbanner .sprice{display:flex;align-items:center;gap:5px;font-weight:700}
+.sbanner .sprice svg{width:15px;height:15px;color:#B07F10}
+.sbanner .go svg{width:20px;height:20px}
+.powered .pw.ph{border:1px solid rgba(242,212,155,.75);background:rgba(255,255,255,.1);color:#FFF1D6;letter-spacing:.02em}
+.spl.ph{border:1px solid rgba(13,46,67,.14);background:linear-gradient(135deg,#FBF7EF,#F2EADB);color:#8A7453;min-width:120px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.spcta{margin:10px 0 0;font-size:11px;color:var(--muted)}
+</style>
+<style id="page-theme">html:root:not([data-tbl]){--ink:#1F2B2F;--muted:#6F6758;--panel:#FFFDF9;--line:rgba(31,43,47,.12);--accent:#0F6B78;--accent-ink:#fff;--cardInk:#1F2B2F}
+html:not([data-tbl]) .subtop{color:#1F2B2F}
+html:not([data-tbl]) .page .icon-btn,html:not([data-tbl]) .shellpill{background:#fff;color:#1F2B2F;box-shadow:inset 0 0 0 1px #E6DCCB}
+html:not([data-tbl]) .shellpill svg{color:#B8925A;width:17px;height:17px}
+html:not([data-tbl]) .stab{background:#fff;color:#6F6758;box-shadow:inset 0 0 0 1px #E6DCCB}
+html:not([data-tbl]) .stab[aria-pressed="true"]{background:#0F6B78;color:#fff;box-shadow:none}
+html:not([data-tbl]) .snote{color:#8A7B66}
+.shh{display:flex;align-items:center;gap:8px}.shh svg{width:20px;height:20px;color:#B8925A}
+html:not([data-tbl]) .panel h2{color:#1F2B2F}
+
+body:has(.hometop) .hero .tagl{display:none}
+body:has(.hometop) .hero .motto{font-style:italic}
+body:has(.hometop) .modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+body:has(.hometop) .modes>*{grid-column:1/-1}
+body:has(.hometop) .modes .m-friends,body:has(.hometop) .modes .m-bot{grid-column:auto;flex-direction:column;align-items:flex-start;gap:12px;min-height:138px;padding:16px;box-shadow:none}
+body:has(.hometop) .modes .m-friends .mchev,body:has(.hometop) .modes .m-bot .mchev{display:none}
+body:has(.hometop) .modes .m-friends b,body:has(.hometop) .modes .m-bot b{font-size:16px}
+body:has(.hometop) .hero h1{letter-spacing:.08em}
+
+html:not([data-tbl]) body::before{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url%28%23n%29' opacity='.06'/%3E%3C/svg%3E") 0 0/180px 180px repeat,radial-gradient(120% 60% at 50% 0%,#FFFDF8 0%,#F6EFE3 60%,#EFE5D4 100%)!important}
+html:not([data-tbl]){background:#EFE5D4}
+body:has(.hometop) .hero{color:#1F2B2F}
+body:has(.hometop) .hero h1{text-shadow:none;color:#1F2B2F}
+body:has(.hometop) .hero .wave path{stroke:#B8925A}
+body:has(.hometop) .hero .motto{color:#6B5B45}
+body:has(.hometop) .powered{color:#6B5B45}
+body:has(.hometop) .powered .pw.ph{border:1px solid #D8C7A6;background:#FBF7EF;color:#8A7453}
+body:has(.hometop) .profbtn,body:has(.hometop) .shellpill,body:has(.hometop) .hometop .icon-btn{background:#fff;color:#1F2B2F;box-shadow:0 1px 0 rgba(0,0,0,.04),inset 0 0 0 1px #E6DCCB}
+body:has(.hometop) .shellpill svg{color:#B8925A}
+body:has(.hometop) .mode{background:#FFFDF9;box-shadow:inset 0 0 0 1px #E8DECE;color:#1F2B2F}
+body:has(.hometop) .mode.quick{background:linear-gradient(135deg,#0F6B78,#0A4B57);color:#fff;box-shadow:0 12px 28px rgba(10,75,87,.28)}
+body:has(.hometop) .mode.quick .mi{color:#F2D49B}
+body:has(.hometop) .mode.m-friends .mi{background:#FBE9E4}
+body:has(.hometop) .mode.m-bot .mi{background:#F8EED8}
+html:not([data-tbl]) .srv{color:#8A7B66!important}
+html:not([data-tbl]) .sbanner{background:#FFFDF9;box-shadow:inset 0 0 0 1px #E8DECE}
+html:not([data-tbl]) .panel{background:#FFFDF9;box-shadow:inset 0 0 0 1px #E8DECE}
+body:has(.hometop) .howbtn{color:#1F2B2F;background:transparent;box-shadow:inset 0 0 0 1px #D8C7A6}
+</style>
+<style id="safety-ui">
+.btn.danger{color:#A8232B}
+.btn.danger-solid{background:#A8232B;color:#fff}
+.linkbtn{display:block;margin:12px auto 0;background:none;border:0;font:inherit;font-size:13px;font-weight:600;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px}
+.linkbtn.danger{color:#A8232B}
+.rreasons{display:flex;flex-direction:column;gap:6px}
+.rrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(127,127,127,.08);font-size:14px;cursor:pointer}
+.rrow input{width:18px;height:18px;accent-color:#A8232B;flex:none}
+.hlist{display:flex;flex-direction:column;margin-top:8px}
+.hrowb{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;border-top:1px solid var(--line);padding:14px 2px;font:inherit;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left}
+.hrowb:first-child{border-top:0}
+.hrowb svg{width:18px;height:18px;color:var(--muted)}
+.blist .lrow{justify-content:space-between}
+</style>
 <style id="exact-table-art">
 /* Table designs: Lagoon light, Pearl sand, Golden hour */
 html[data-tbl="t-lagoon"] .table::before,.tprev[data-tbl="t-lagoon"]{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url%28%23n%29' opacity='.05'/%3E%3C/svg%3E") 0 0/180px 180px repeat,url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 390 844' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke='%23fff' stroke-linecap='round'%3E%3Cpath d='M-40 470C60 500 120 600 230 640S360 700 440 760' stroke-opacity='.09' stroke-width='1'/%3E%3Cpath d='M-40 492C60 522 118 616 228 656S358 716 440 776' stroke-opacity='.05' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") center/cover no-repeat,radial-gradient(120% 85% at 50% 40%,#177886 0%,#0F6371 55%,#0A4B57 100%)!important}
@@ -633,6 +719,9 @@ const SPONSORS=[
 /* Main sponsor, shown as "Powered by" under the title, in the lobby and on the table.
    Leave name and logo empty to show a placeholder on the home screen only. */
 const MAIN_SPONSOR={name:'', logo:'', url:''};
+/* Support contact shown in the app. Leave SUPPORT_EMAIL empty to use the in-app message form only. */
+const SUPPORT_EMAIL='';
+const PRIVACY_URL='privacy.html';
 
 const $=s=>document.querySelector(s);
 const app=$('#app');
@@ -730,7 +819,9 @@ async function initFirebase(){try{
     import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js')
   ]);
   const fa=A.initializeApp(FIREBASE_CONFIG),auth=U.getAuth(fa);
-  FB.auth=auth; FB.db=F.getFirestore(fa); Object.assign(FB,{doc:F.doc,setDoc:F.setDoc,getDoc:F.getDoc,collection:F.collection,query:F.query,orderBy:F.orderBy,limit:F.limit,getDocs:F.getDocs,createUserWithEmailAndPassword:U.createUserWithEmailAndPassword,signInWithEmailAndPassword:U.signInWithEmailAndPassword,signOut:U.signOut});
+  FB.auth=auth; FB.db=F.getFirestore(fa); Object.assign(FB,{doc:F.doc,setDoc:F.setDoc,getDoc:F.getDoc,collection:F.collection,query:F.query,orderBy:F.orderBy,limit:F.limit,getDocs:F.getDocs,createUserWithEmailAndPassword:U.createUserWithEmailAndPassword,signInWithEmailAndPassword:U.signInWithEmailAndPassword,signOut:U.signOut,deleteDoc:F.deleteDoc,addDoc:F.addDoc,serverTimestamp:F.serverTimestamp,EmailAuthProvider:U.EmailAuthProvider,reauthenticateWithCredential:U.reauthenticateWithCredential,deleteUser:U.deleteUser,signInAnonymously:U.signInAnonymously});
+  /* wait until Firebase has restored the saved session, otherwise a refresh would sign the player out */
+  try{if(auth.authStateReady)await auth.authStateReady();else await new Promise(r=>{const un=U.onAuthStateChanged(auth,()=>{un();r();});});}catch(e){}
   let cred;if(auth.currentUser){cred={user:auth.currentUser};}else{cred=await U.signInAnonymously(auth);} FB.user=cred.user; FB.ready=true;
   if(!FB.user.isAnonymous) await fbLoadAndMerge();
 }catch(e){console.warn('Firebase unavailable; local save still works',e);}}
@@ -771,10 +862,10 @@ let sponIdx=0;
 const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 function sponInner(s){return s.logo?`<img src="${esc(s.logo)}" alt="${esc(s.name||'Sponsor')}" loading="lazy" decoding="async">`:`<span>${esc(s.name||'Sponsor')}</span>`;}
 function sponsorTileHTML(){if(!SPONSORS.length)return '<div class="spon ph" aria-hidden="true">Sponsor spot</div>';const s=SPONSORS[sponIdx%SPONSORS.length];return `<div class="spon" data-spon aria-label="Sponsor: ${esc(s.name||'')}">${sponInner(s)}</div>`;}
-function sponsorPanelHTML(){if(!SPONSORS.length)return '<section class="panel spons"><div class="muted">Supported by</div><div class="sprow"><div class="spl ph">Your brand here</div></div></section>';
+function sponsorPanelHTML(){if(!SPONSORS.length)return '<section class="panel spons"><div class="muted">Supported by</div><div class="sprow"><div class="spl ph">Sponsor</div><div class="spl ph">Sponsor</div></div><p class="spcta">Advertise with Dhivehi Digu</p></section>';
 return `<section class="panel spons"><div class="muted">Supported by</div><div class="sprow">${SPONSORS.map(s=>{const u=safeUrl(s.url);return u?`<a class="spl" href="${esc(u)}" target="_blank" rel="noopener sponsored">${sponInner(s)}</a>`:`<div class="spl">${sponInner(s)}</div>`;}).join('')}</div></section>`;}
 const hasMain=()=>!!(MAIN_SPONSOR&&(MAIN_SPONSOR.name||MAIN_SPONSOR.logo));
-function poweredHTML(inPanel){const cls='powered'+(inPanel?' inpanel':'');if(!hasMain())return inPanel?'':`<div class="${cls}"><span>Powered by</span><span class="pw ph">Main sponsor</span></div>`;
+function poweredHTML(inPanel){const cls='powered'+(inPanel?' inpanel':'');if(!hasMain())return inPanel?'':`<div class="${cls}"><span>Powered by</span><span class="pw ph">Your brand here</span></div>`;
 const u=safeUrl(MAIN_SPONSOR.url),inner=sponInner(MAIN_SPONSOR);return `<div class="${cls}"><span>Powered by</span>${u?`<a class="pw" href="${esc(u)}" target="_blank" rel="noopener sponsored">${inner}</a>`:`<span class="pw">${inner}</span>`}</div>`;}
 function poweredMini(){return hasMain()?`<span class="pwmini">Powered by <span class="pwm">${sponInner(MAIN_SPONSOR)}</span></span>`:'';}
 function sponsorLineHTML(){if(!SPONSORS.length)return '';const s=SPONSORS[sponIdx%SPONSORS.length];const u=safeUrl(s.url);const inner=sponInner(s);return `<div class="sponline"><span class="muted">Supported by</span>${u?`<a class="spl sm" href="${esc(u)}" target="_blank" rel="noopener sponsored">${inner}</a>`:`<span class="spl sm">${inner}</span>`}</div>`;}
@@ -1010,7 +1101,7 @@ function openAccount(){
  <input class="in" id="authPass" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" style="width:100%;margin-bottom:14px">
  <div class="row"><button class="btn primary" data-a="authLogin">Login</button><button class="btn soft" data-a="authRegister">Register</button></div>`:
  `<p class="muted" style="margin:0 0 12px">Signed in as <b>${esc(authUsername()||myName()||'Digu Player')}</b></p>
- <button class="btn soft wide" data-a="authLogout">Log out</button>`}
+ <button class="btn soft wide" data-a="authLogout">Log out</button><button class="linkbtn danger" data-a="delAcct">Delete account</button>`}
  <div class="row"><button class="btn ghost" data-a="close">Close</button></div>`);
 }
 async function authDo(kind){
@@ -1065,24 +1156,25 @@ async function authLogout(){try{
   ls.set('dd-inv',JSON.stringify(INV));
   closeSheet(); toast('Logged out'); renderProfile();
 }catch(e){toast('Could not log out.');}}
+const HI={bolt:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z"/></svg>`,friends:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.2 14.1c2.7.4 4.8 2.7 4.8 5.9"/></svg>`,bot:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="3.5"/><path d="M12 7V4"/><circle cx="12" cy="3.4" r=".9"/><circle cx="9.3" cy="12.6" r="1.2" fill="currentColor" stroke="none"/><circle cx="14.7" cy="12.6" r="1.2" fill="currentColor" stroke="none"/><path d="M9.5 16h5"/></svg>`,book:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5V5.5M8 7.5h8"/></svg>`,trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5.2a3 3 0 0 0 3.1 4M16 6h2.8a3 3 0 0 1-3.1 4M12 13v4M8.5 21h7M10 17h4"/></svg>`,shell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3C8.2 3 6 7 6 12s2.2 9 6 9 6-4 6-9-2.2-9-6-9z"/><path d="M12 6.2c-.8 1.8-1.1 3.8-1.1 5.8s.3 4 1.1 5.8c.8-1.8 1.1-3.8 1.1-5.8s-.3-4-1.1-5.8z"/></svg>`,chev:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>`};
 function renderHome(){
 screen='home';offTable();closeOv();const nm=myName();
 app.innerHTML=`<main class="page">
-<div class="hometop"><button class="profbtn" data-a="profile" aria-label="Your profile">${avatarHTML({piece:myPiece(),cos:myCos()},0)}<span class="pn">${nm?esc(nm):'Set your name'}</span></button><div class="right">${authIsGuest()?'<button class="btn soft sm" data-a="account">Login / Register</button>':''}<button class="shellpill" data-a="goStore" aria-label="Store, ${INV.shells} shells">🐚 ${compactNum(INV.shells)}</button><button class="icon-btn" data-a="goStore" aria-label="Store" style="font-size:19px">🛍️</button><button class="icon-btn musicbtn" data-a="music" aria-label="Background music" aria-pressed="${Music.on}">${ICON.music}</button></div></div>
+<div class="hometop"><button class="profbtn" data-a="profile" aria-label="Your profile">${avatarHTML({piece:myPiece(),cos:myCos()},0)}<span class="pwrap"><span class="pn">${nm?esc(nm):'Player'}</span><span class="ps">${authIsGuest()?'Guest · Sign in':'Signed in'}</span></span></button><div class="right"><button class="shellpill" data-a="goStore" aria-label="Store, ${INV.shells} shells">${HI.shell}<span>${compactNum(INV.shells)}</span></button><button class="icon-btn musicbtn" data-a="music" aria-label="Background music" aria-pressed="${Music.on}">${ICON.music}</button></div></div>
 <section class="hero">${heroFan()}<h1>DHIVEHI<br>DIGU</h1><svg class="wave" viewBox="0 0 90 12" aria-hidden="true"><path d="M2 8c10-6 20 4 30-1s20-5 30 0 18 3 26-2" fill="none" stroke="#fff" stroke-width="1.5"/></svg><div class="tagl">Maldives</div><p class="motto">Can You Dig It?</p>${poweredHTML()}</section>
 <section class="modes">
 ${ls.get('lg-solo')?'<button class="btn soft wide" data-a="resumeSolo">Resume your game vs computer</button>':''}
-<button class="mode quick" data-a="quick"><span class="mi">⚡</span><span class="mt"><b>Quick Match</b><small>Join a public table in one tap</small></span></button>
-<button class="mode" data-a="goFriends"><span class="mi">👥</span><span class="mt"><b>Play with Friends</b><small>Create, join or browse tables</small></span></button>
-<button class="mode" data-a="goComputer"><span class="mi">🤖</span><span class="mt"><b>Play vs Computer</b><small>1 to 5 opponents, works offline</small></span></button>
-<button class="mode soon" disabled><span class="mi">🏆</span><span class="mt"><b>Ranked Match</b><small>Coming soon</small></span></button>
+<button class="mode quick" data-a="quick"><span class="mi">${HI.bolt}</span><span class="mt"><b>Quick Match</b><small>Join a public table in one tap</small></span><span class="mchev">${HI.chev}</span></button>
+<button class="mode m-friends" data-a="goFriends"><span class="mi">${HI.friends}</span><span class="mt"><b>Play with Friends</b><small>Create, join or browse tables</small></span><span class="mchev">${HI.chev}</span></button>
+<button class="mode m-bot" data-a="goComputer"><span class="mi">${HI.bot}</span><span class="mt"><b>Play vs Computer</b><small>1 to 5 opponents, works offline</small></span><span class="mchev">${HI.chev}</span></button>
 ${db?'':srvHTML()}
 </section>
 ${storeBannerHTML()}
 ${sponsorPanelHTML()}
-<button class="btn ghost wide howbtn" data-a="howto">How to play</button>
-<section class="panel" style="margin-top:18px"><h2>🏆 Most Wins</h2><div data-wins-board data-compact="1"><p class="muted">Loading leaderboard…</p></div><p class="muted" style="font-size:11px;margin:10px 0 0;text-align:center">Top 3 players by total wins</p></section>
-</main>`;warmUp();setTimeout(loadWinsLeaderboard,0);}
+<button class="btn ghost wide howbtn" data-a="howto">${HI.book}<span>How to play</span></button>
+<section class="panel" style="margin-top:18px"><h2 class="lbh"><span class="lbi">${HI.trophy}</span>Most Wins</h2><div data-wins-board data-compact="1"><p class="muted">Loading leaderboard…</p></div><p class="muted" style="font-size:11px;margin:10px 0 0;text-align:center">Top 3 players by total wins</p></section>
+</main>`;warmUp();setTimeout(loadWinsLeaderboard,0);
+if(!nm&&!ls.get('dd-asked-name')){ls.set('dd-asked-name','1');setTimeout(()=>{if(screen==='home')openProfile(null,'Welcome to Dhivehi Digu! What should we call you?');},700);}}
 function renderFriends(){
 screen='friends';offTable();closeOv();const last=ls.get('lg-room');
 app.innerHTML=`<main class="page">
@@ -1296,14 +1388,14 @@ fly(from,to,N.ginDown===m.c?backHTML():faceHTML(m.c),{base:base,fromAv:!mine,spi
 /* ---------- overlay ---------- */
 function closeOv(){const o=$('#ov');o.classList.remove('show');o.innerHTML='';o._k=null;}
 function scoresHTML(){const ps=S.players.map((p,k)=>({p:p,k:k})).sort((a,b)=>b.p.score-a.p.score);const TOP=Math.max(1,...S.players.map(p=>p.score));
-return `<div class="scores">${ps.map(({p,k})=>`<div class="srow"><span class="mini">${pieceHTML(pieceOf(p,k),PC[k])}</span><div class="n"><span>${esc(p.name)}${p.id===myId?' (you)':''}</span><div class="bar"><i style="--c:${PC[k]};width:${Math.max(0,Math.min(100,p.score/TOP*100))}%"></i></div></div><b>${p.score}</b></div>`).join('')}</div>`;}
+return `<div class="scores">${ps.map(({p,k})=>`<div class="srow"><span class="mini">${pieceHTML(pieceOf(p,k),PC[k])}</span><div class="n"><span>${esc(p.name)}${p.id===myId&&p.name!=='You'?' (you)':''}</span><div class="bar"><i style="--c:${PC[k]};width:${Math.max(0,Math.min(100,p.score/TOP*100))}%"></i></div></div><b>${p.score}</b></div>`).join('')}</div>`;}
 function handRowsHTML(r){const rows=S.players.map((p,k)=>({p:p,k:k,x:r.rows[k]})).filter(o=>o.x).sort((a,b)=>b.x.total-a.x.total);
 return `<div class="hands"><div class="hhead"><span></span><span>This hand</span><span>Melded</span><span>Left out</span><span>Total</span></div>${rows.map(({p,k,x})=>`<div class="hrow"><span class="mini">${pieceHTML(pieceOf(p,k),PC[k])}</span><span class="hn">${esc(p.name)}${x.bonus?`<small>${r.big?'Big gin':'Gin'} +${x.bonus}</small>`:''}</span><span class="hp">+${x.plus}</span><span class="hm">−${x.minus}</span><b class="${x.total<0?'neg':''}">${fmt(x.total)}</b></div>`).join('')}</div>`;}
 function revealHTML(r){if(!r.lay)return '';
 const others=S.players.map((p,k)=>({p:p,k:k,l:r.lay[k]})).filter(o=>o.l&&o.k!==r.w&&(o.l.m.length||o.l.d.length));
 if(!others.length)return '';
 const grp=cards=>cards.map(c=>`<div class="card">${faceHTML(c)}</div>`).join('');
-return `<div class="reveal"><div class="muted totlbl">Final hands</div>${others.map(o=>`<div class="rvp"><div class="nm2">${esc(o.p.name)}${o.p.id===myId?' (you)':''}</div><div class="rvrow">${o.l.m.map(m=>`<div class="rvg">${grp(m.split(','))}</div>`).join('')}${o.l.d.length?`<div class="rvg dead">${grp(o.l.d)}</div>`:''}</div></div>`).join('')}</div>`;}
+return `<div class="reveal"><div class="muted totlbl">Final hands</div>${others.map(o=>`<div class="rvp"><div class="nm2">${esc(o.p.name)}${o.p.id===myId&&o.p.name!=='You'?' (you)':''}</div><div class="rvrow">${o.l.m.map(m=>`<div class="rvg">${grp(m.split(','))}</div>`).join('')}${o.l.d.length?`<div class="rvg dead">${grp(o.l.d)}</div>`:''}</div></div>`).join('')}</div>`;}
 function renderOv(){const o=$('#ov');
 if(S.status!=='handover'&&S.status!=='over'){if(o._k)closeOv();return;}
 const k=S.status+S.handNo;if(o._k===k)return;o._k=k;const aw=awardHand();
@@ -1551,11 +1643,11 @@ if(it.cat==='title')return `<span class="badge-t">${esc(it.name)}</span>`;return
 function itemTileHTML(it){const r=RAR[it.rarity]||RAR.common;const [cls,label]=stateLabel(it);
 return `<button class="sitem${it.rarity==='legendary'?' leg':''}" data-a="item" data-id="${it.id}">${it.end&&!isOwned(it)?'<span class="ltd">Limited</span>':''}<div class="sprev">${thumbHTML(it)}</div><div class="sinfo"><b>${esc(it.name)}</b><span class="rar" style="--rc:${r.c}">${r.n}</span></div><div class="sprice ${cls}">${label}</div></button>`;}
 function storeBannerHTML(){const f=CATALOG.find(it=>it.feat&&itemState(it)==='buy');if(!f)return '';
-return `<button class="sbanner" data-a="item" data-id="${f.id}"><span class="sprev">${thumbHTML(f)}</span><span class="sbt"><small>NEW IN STORE</small><b>${esc(f.name)}</b><span>🐚 ${f.shells}</span></span><span class="go" aria-hidden="true">›</span></button>`;}
+return `<button class="sbanner" data-a="item" data-id="${f.id}"><span class="sprev">${thumbHTML(f)}</span><span class="sbt"><small>NEW IN STORE</small><b>${esc(f.name)}</b><span class="sprice">${HI.shell}${f.shells}</span></span><span class="go" aria-hidden="true">${HI.chev}</span></button>`;}
 function renderStore(tab){if(tab)storeTab=tab;screen='store';offTable();closeOv();
 const list=CATALOG.filter(it=>it.cat===storeTab&&(isOwned(it)||itemState(it)!=='gone')).sort((a,b)=>{const rank=x=>itemState(x)==='event'?2:0;return rank(a)-rank(b)||(a.shells||0)-(b.shells||0);});
 app.innerHTML=`<main class="page">
-<div class="subtop"><button class="icon-btn" data-a="goHome" aria-label="Back">${ICON.back}</button><h1>Store</h1><button class="shellpill" style="margin-left:auto" data-a="goProfile" aria-label="${INV.shells} shells">🐚 ${compactNum(INV.shells)}</button></div>
+<div class="subtop"><button class="icon-btn" data-a="goHome" aria-label="Back">${ICON.back}</button><h1>Store</h1><button class="shellpill" style="margin-left:auto" data-a="goProfile" aria-label="${INV.shells} shells">${HI.shell}<span>${compactNum(INV.shells)}</span></button></div>
 <div class="stabs" role="tablist">${CATS.map(([c,n])=>`<button class="stab" role="tab" data-a="stab" data-c="${c}" aria-pressed="${c===storeTab}">${n}</button>`).join('')}</div>
 <div class="sgrid">${list.map(itemTileHTML).join('')}</div>
 <p class="snote">Card collections are cosmetic only. Legendary collections equip their matching front and back together.</p></main>`;}
@@ -1597,14 +1689,15 @@ app.innerHTML=`<main class="page">
 <section class="panel" style="text-align:center">${avatarHTML({piece:myPiece(),cos:myCos()},0,'pbig')}<h2>${esc(myName()||'Set your name')}</h2><div style="margin-top:8px"><span class="badge-t">${esc(eqT.name)}</span></div>
 <div class="xpbar"><i style="width:${pct}%"></i></div><p class="muted" style="margin:0;font-size:12px">${INV.xp} XP${next?`, ${next[2]-INV.xp} XP to ${next[1]}`:', top level reached'}</p>
 <div class="row" style="margin-top:12px"><button class="btn soft" data-a="editProfile">Edit name and avatar</button></div></section>
-<section class="panel"><div class="row" style="justify-content:space-between;margin:0"><h2>🐚 ${compactNum(INV.shells)} shells</h2><button class="btn primary sm" data-a="goStore">Store</button></div><p class="muted" style="margin:6px 0 0;font-size:12px">Earn shells by playing hands and winning games, up to ${DAILY_CAP} a day. Online games earn more.</p></section>
+<section class="panel"><div class="row" style="justify-content:space-between;margin:0"><h2 class="shh">${HI.shell}${compactNum(INV.shells)} shells</h2><button class="btn primary sm" data-a="goStore">Store</button></div><p class="muted" style="margin:6px 0 0;font-size:12px">Earn shells by playing hands and winning games, up to ${DAILY_CAP} a day. Online games earn more.</p></section>
 <section class="panel"><h2>Equipped</h2>${CATS.filter(c=>c[0]!=='emote').map(([c,n])=>`<div class="eqrow"><span><small>${n.replace(/s$/,'')}</small>${esc(BYID[equippedId(c)].name)}</span><button class="btn soft sm" data-a="stab" data-c="${c}">Change</button></div>`).join('')}</section>
 <section class="panel"><h2>Stats</h2><div class="stats">${[[st.games,'Games'],[st.wins,'Wins'],[st.hands,'Hands'],[st.gins,'Gins'],[st.big,'Big gins'],[st.online,'Online games']].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join('')}</div><p class="muted" style="font-size:12px;margin:10px 0 0">Best hand: ${st.best==null?'none yet':fmt(st.best)+' points'}</p></section>
 <section class="panel"><h2>Badges</h2><div class="badges">${badges.map(([ic,n,ok])=>`<div class="bdg${ok?'':' off'}"><i>${ic}</i>${n}</div>`).join('')}</div></section>
 <section class="panel"><h2>🏆 Most Wins</h2><div id="wins-board" data-wins-board><p class="muted">Loading leaderboard…</p></div></section>
 <section class="panel"><h2>Unlock history</h2>${INV.hist.slice(0,10).map(h=>`<p class="hist"><b>${esc(h.id==='welcome'?'Welcome gift':h.id==='refund'?'Refund for retired designs':(BYID[h.id]?BYID[h.id].name:h.id))}</b> ${how(h)}, ${fmtDate(h.t)}</p>`).join('')||'<p class="muted">Nothing yet.</p>'}</section>
-<section class="panel"><h2>Account</h2>${authIsGuest()?`<p class="muted" style="margin:0 0 10px">You're playing as a guest.</p><button class="btn primary wide" data-a="account">Login / Register</button>`:`<p class="muted" style="margin:0 0 10px">Signed in as <b>${esc(FB.user.email||'Digu Player')}</b></p><button class="btn soft wide" data-a="authLogout">Log out</button>`}</section>
+<section class="panel"><h2>Account</h2>${authIsGuest()?`<p class="muted" style="margin:0 0 10px">You're playing as a guest.</p><button class="btn primary wide" data-a="account">Login / Register</button>`:`<p class="muted" style="margin:0 0 10px">Signed in as <b>${esc(authUsername()||myName()||'Digu Player')}</b></p><button class="btn soft wide" data-a="authLogout">Log out</button><button class="linkbtn danger" data-a="delAcct">Delete account</button>`}</section>
 <section class="panel"><h2>Settings</h2><div class="row"><button class="btn soft" data-a="smoothToggle" aria-pressed="${isSmooth()}">Smooth mode: ${isSmooth()?'On':'Off'}</button></div><p class="muted" style="font-size:12px;margin:8px 0 0">Turns off moving backgrounds, animated frames and effects. It switches on by itself on slower phones.</p></section>
+<section class="panel"><h2>Help &amp; privacy</h2><div class="hlist"><button class="hrowb" data-a="support"><span>Help &amp; support</span>${HI.chev}</button><button class="hrowb" data-a="blocked"><span>Blocked players${BLK.length?` (${BLK.length})`:''}</span>${HI.chev}</button><button class="hrowb" data-a="privacy"><span>Privacy policy</span>${HI.chev}</button></div></section>
 <p class="snote">Your XP and game stats sync to your permanent Digu player profile when Firebase is available.</p>
 </main>`;setTimeout(loadWinsLeaderboard,0);}
 
@@ -1615,7 +1708,10 @@ const EMOTE_PACKS=[{id:'basic',name:'Reactions',items:[
 {id:'ocean',name:'Ocean Pack',items:[{id:'o-turtle',t:'🐢',n:'Turtle'},{id:'o-fish',t:'🐠',n:'Reef fish'},{id:'o-shark',t:'🦈',n:'Shark'},{id:'o-wave',t:'🌊',n:'Wave'},{id:'o-shell',t:'🐚',n:'Shell'},{id:'o-coco',t:'🥥',n:'Coconut'}]},
 {id:'island',name:'Island Pack',items:[{id:'i-isle',t:'🏝️',n:'Island'},{id:'i-sun',t:'☀️',n:'Sunny'},{id:'i-boat',t:'⛵',n:'Sailing'},{id:'i-mango',t:'🥭',n:'Mango'},{id:'i-sleep',t:'😴',n:'Sleepy'},{id:'i-wow',t:'WOW',n:'Wow',txt:true},{id:'i-nice',t:'NICE',n:'Nice',txt:true}]}];
 const EMOTES={};EMOTE_PACKS.forEach(p=>p.items.forEach(it=>{EMOTES[it.id]=it;}));
-const EMOTE_CD=4000;let lastEmote=0;const mutedP=new Set(),emoteT={};
+const EMOTE_CD=4000;let lastEmote=0;const BLK=(()=>{try{const a=JSON.parse(ls.get('dd-blocked')||'[]');return Array.isArray(a)?a.filter(x=>x&&x.id):[];}catch(e){return [];}})();
+const saveBlk=()=>ls.set('dd-blocked',JSON.stringify(BLK.slice(-200)));
+const isBlocked=id=>BLK.some(x=>x.id===id);
+const mutedP=new Set(BLK.map(x=>x.id)),emoteT={};
 const emotesMuted=()=>ls.get('dd-emute')==='1';
 function toggleEmotes(){const t=$('#emotray');if(!t)return;closeChat();if(Date.now()-lastEmote<EMOTE_CD){toast('Wait a moment before the next reaction.');return;}t.hidden=!t.hidden;}
 function closeEmotes(){const t=$('#emotray');if(t)t.hidden=true;}
@@ -1655,9 +1751,58 @@ function receiveChat(pid,m){if(!S||chatOff())return;if(pid!==myId&&mutedP.has(pi
 chatLog.push({pid:pid,name:p.name,m:m});if(chatLog.length>30)chatLog.shift();
 const bar=$('#chatbar');if(bar&&!bar.hidden)renderChatLog();else if(pid!==myId){const d=document.querySelector('#chatbtn .dot');if(d)d.hidden=false;}
 bubbleAt(pid,m,'chat',3600);}
+
+const REPORT_REASONS=['Offensive chat','Offensive name','Cheating or unfair play','Harassment','Something else'];
+function openReport(id){const p=S&&S.players.find(q=>q.id===id);if(!p)return;
+sheet(`<div class="grab"></div><h2>Report ${esc(p.name)}</h2><p class="muted" style="margin:4px 0 12px">Reports are private. We review them and act on repeated or serious ones.</p>
+<div class="rreasons">${REPORT_REASONS.map((r,i)=>`<label class="rrow"><input type="radio" name="rr" value="${i}"${i===0?' checked':''}><span>${r}</span></label>`).join('')}</div>
+<textarea class="in" id="rnote" maxlength="300" rows="3" placeholder="Add details (optional)" style="margin-top:10px;resize:none"></textarea>
+<label class="rrow" style="margin-top:8px"><input type="checkbox" id="rblock" checked><span>Also block this player</span></label>
+<div class="row"><button class="btn ghost" data-a="close">Cancel</button><button class="btn primary" data-a="sendReport" data-id="${esc(id)}">Send report</button></div>`);}
+async function sendReport(id){const p=S&&S.players.find(q=>q.id===id);if(!p)return;
+const sel=document.querySelector('input[name="rr"]:checked');const reason=REPORT_REASONS[sel?+sel.value:0]||'Other';
+const note=cleanText((($('#rnote')||{}).value||'').slice(0,300));const alsoBlock=!!(($('#rblock')||{}).checked);
+const rep={reason:reason,note:String((($('#rnote')||{}).value||'')).slice(0,300),targetId:String(id).slice(0,40),targetName:String(p.name||'').slice(0,20),
+ byId:myId,byName:(myName()||'Player').slice(0,20),table:String(S.code||'').slice(0,8),mode:mode||'',
+ chat:chatLog.filter(c=>c.pid===id).slice(-10).map(c=>String(c.m).slice(0,60)),t:Date.now()};
+let ok=false;try{if(FB.ready&&FB.addDoc){await FB.addDoc(FB.collection(FB.db,'reports'),Object.assign(rep,{uid:FB.user?FB.user.uid:'',at:FB.serverTimestamp()}));ok=true;}}catch(e){console.warn('report failed',e);}
+if(alsoBlock&&!isBlocked(id)){BLK.push({id:id,name:p.name,t:Date.now()});mutedP.add(id);saveBlk();}
+closeSheet();
+if(ok)toast('Report sent. Thank you for helping keep Digu friendly.',4000);
+else if(SUPPORT_EMAIL){location.href='mailto:'+SUPPORT_EMAIL+'?subject='+encodeURIComponent('Report: '+rep.targetName)+'&body='+encodeURIComponent(reason+'\n'+rep.note+'\nTable '+rep.table+'\nChat: '+rep.chat.join(' | '));}
+else toast('Couldn’t send the report right now. Please try again when you’re online.',4500);}
+function openBlocked(){sheet(`<div class="grab"></div><h2>Blocked players</h2>${BLK.length?`<div class="blist">${BLK.slice().reverse().map(x=>`<div class="lrow"><span class="lname">${esc(x.name||'Player')}</span><button class="btn soft sm" data-a="unblock" data-id="${esc(x.id)}">Unblock</button></div>`).join('')}</div>`:'<p class="muted">You haven’t blocked anyone. Tap a player’s avatar during a game to block or report them.</p>'}
+<div class="row"><button class="btn primary" data-a="close">Done</button></div>`);}
+function openSupport(){sheet(`<div class="grab"></div><h2>Help &amp; support</h2><p class="muted" style="margin:4px 0 12px">Questions, a bug, or a problem with another player? Send us a message.${SUPPORT_EMAIL?` You can also email <b>${esc(SUPPORT_EMAIL)}</b>.`:''}</p>
+<textarea class="in" id="supmsg" maxlength="600" rows="5" placeholder="Your message" style="resize:none"></textarea>
+<div class="row"><button class="btn ghost" data-a="close">Cancel</button><button class="btn primary" data-a="sendSupport">Send</button></div>`);setTimeout(()=>{const t=$('#supmsg');t&&t.focus();},350);}
+async function sendSupport(){const m=String((($('#supmsg')||{}).value||'')).trim().slice(0,600);if(m.length<3){toast('Please write a short message.');return;}
+let ok=false;try{if(FB.ready&&FB.addDoc){await FB.addDoc(FB.collection(FB.db,'support'),{msg:m,byId:myId,byName:(myName()||'Player').slice(0,20),user:authUsername()||'',uid:FB.user?FB.user.uid:'',ua:navigator.userAgent.slice(0,160),t:Date.now(),at:FB.serverTimestamp()});ok=true;}}catch(e){console.warn('support failed',e);}
+if(ok){closeSheet();toast('Message sent. We’ll get back to you in the game or by your account.',4000);}
+else if(SUPPORT_EMAIL){location.href='mailto:'+SUPPORT_EMAIL+'?subject=Dhivehi%20Digu%20support&body='+encodeURIComponent(m);}
+else toast('Couldn’t send right now. Please try again when you’re online.',4500);}
+function openDeleteAccount(){if(authIsGuest())return;
+sheet(`<div class="grab"></div><h2>Delete account</h2><p class="muted" style="margin:4px 0 12px">This permanently deletes <b>${esc(authUsername()||myName()||'your account')}</b>, your leaderboard entry and your saved progress on this phone. It can’t be undone.</p>
+<input class="in" id="delPass" type="password" placeholder="Enter your password to confirm" autocomplete="current-password" style="width:100%">
+<div class="row"><button class="btn ghost" data-a="close">Cancel</button><button class="btn danger-solid" data-a="delAcctGo">Delete forever</button></div>`);}
+async function deleteAccount(){const u=FB.auth&&FB.auth.currentUser;if(!u||u.isAnonymous)return;const pass=(($('#delPass')||{}).value||'');
+if(pass.length<6){toast('Enter your password to confirm.');return;}
+const btn=document.querySelector('[data-a="delAcctGo"]');if(btn)btn.disabled=true;
+try{await FB.reauthenticateWithCredential(u,FB.EmailAuthProvider.credential(u.email,pass));
+ try{await FB.deleteDoc(FB.doc(FB.db,'players',u.uid));}catch(e){console.warn('profile delete failed',e);}
+ await FB.deleteUser(u);
+ ['dd-auth-username','dd-login-email','lg-name','lg-solo','dd-blocked'].forEach(k=>ls.del(k));
+ INV.shells=WELCOME;INV.xp=0;INV.owned={};INV.eq={};INV.hist=[{id:'welcome',t:Date.now(),how:'gift',shells:WELCOME}];
+ INV.stats={hands:0,gins:0,big:0,games:0,wins:0,online:0,best:null};INV.aw=[];INV.day='';INV.dayEarned=0;ls.set('dd-inv',JSON.stringify(INV));
+ BLK.length=0;mutedP.clear();
+ try{const c=await FB.signInAnonymously(FB.auth);FB.user=c.user;}catch(e){}
+ closeSheet();toast('Your account has been deleted.',4000);renderHome();
+}catch(e){if(btn)btn.disabled=false;const c=(e&&e.code)||'';
+ toast(/wrong-password|invalid-credential/.test(c)?'That password isn’t right.':c==='auth/too-many-requests'?'Too many attempts. Try again later.':'Couldn’t delete the account'+(c?' ('+c+')':'')+'.',4500);}}
 function openPlayer(k){const p=S&&S.players[k];if(!p)return;const muted=mutedP.has(p.id);
 sheet(`<div class="grab"></div><div class="pprof">${avatarHTML(p,k)}<h2>${esc(p.name)}</h2>${!p.bot&&p.cos&&BYID[p.cos.t]?`<div style="margin-top:6px"><span class="badge-t">${esc(BYID[p.cos.t].name)}</span></div>`:''}<p class="muted">${p.bot?'Computer player':(p.id===S.hostId?'Host':'Player')}, ${p.score} points</p>${!p.bot&&p.cos&&p.cos.g?`<p class="muted" style="font-size:12px">${p.cos.w} wins from ${p.cos.g} games</p>`:''}</div>
 ${p.bot||mode!=='p2p'?'':`<div class="row"><button class="btn soft" data-a="mutep" data-id="${esc(p.id)}">${muted?'Unmute this player':'Mute chat and reactions'}</button></div>`}
+${p.bot||p.id===myId?'':`<div class="row"><button class="btn soft" data-a="blockp" data-id="${esc(p.id)}">${isBlocked(p.id)?'Unblock':'Block player'}</button><button class="btn soft danger" data-a="reportp" data-id="${esc(p.id)}">Report player</button></div>`}
 <div class="row"><button class="btn primary" data-a="close">Close</button></div>`);}
 
 /* ---------- invites ---------- */
@@ -1977,6 +2122,16 @@ case 'chatQuick':sendChat(b.dataset.m);break;
 case 'chatToggle':ls.set('dd-chat',chatOff()?'1':'0');if(chatOff())closeChat();if(S){renderTable();openMenu();}break;
 case 'emote':sendEmote(b.dataset.e);break;
 case 'opp':openPlayer(+b.dataset.k);break;
+case 'blockp':{const id=b.dataset.id;const k=S?S.players.findIndex(q=>q.id===id):-1;const p=k>=0?S.players[k]:null;if(isBlocked(id)){BLK.splice(BLK.findIndex(x=>x.id===id),1);mutedP.delete(id);toast('Player unblocked.');}else{BLK.push({id:id,name:p?p.name:'Player',t:Date.now()});mutedP.add(id);toast('Blocked. You won’t see their chat or reactions.');}saveBlk();if(k>=0)openPlayer(k);else if(screen==='profile')openBlocked();break;}
+case 'reportp':openReport(b.dataset.id);break;
+case 'sendReport':sendReport(b.dataset.id);break;
+case 'blocked':openBlocked();break;
+case 'unblock':{const id=b.dataset.id;const j=BLK.findIndex(x=>x.id===id);if(j>=0){BLK.splice(j,1);mutedP.delete(id);saveBlk();}openBlocked();break;}
+case 'support':openSupport();break;
+case 'sendSupport':sendSupport();break;
+case 'privacy':window.open(PRIVACY_URL,'_blank','noopener');break;
+case 'delAcct':openDeleteAccount();break;
+case 'delAcctGo':deleteAccount();break;
 case 'mutep':{const id=b.dataset.id;if(mutedP.has(id))mutedP.delete(id);else mutedP.add(id);const k=S?S.players.findIndex(q=>q.id===id):-1;if(k>=0)openPlayer(k);break;}
 case 'emute':ls.set('dd-emute',emotesMuted()?'0':'1');if(S)openMenu();break;
 case 'music':{AU.unlock();const v=Music.set(!Music.on);ls.set('dd-music',v?'1':'0');if($('#sheet').classList.contains('open')&&S)openMenu();break;}
