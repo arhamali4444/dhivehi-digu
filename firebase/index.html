@@ -2119,7 +2119,8 @@ const steps=ios?(crios?'<li>Open the iPhone <b>Settings</b> app → <b>Apps</b> 
 sheet(`<div class="grab"></div><h2>Allow the microphone</h2><p class="muted" style="margin:4px 0 10px">Your browser blocked the mic for this game. To talk:</p><ol class="micsteps">${steps}</ol><p class="muted" style="font-size:11px;margin:8px 0 0">You can still hear everyone without a mic. (${esc(nm)})</p><div class="row"><button class="btn primary" data-a="close">OK</button></div>`);}
 async function vcMic(){if(!vcAvail())return;vcAC();VC.peers.forEach(p=>{if(p.au.paused&&p.au.srcObject)p.au.play().catch(()=>{});});
  if(!VC.stream){try{VC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
-  catch(e){vcMicHelp(e);return;}VC.me=vcMeter(VC.stream);}
+  catch(e){if(e&&e.name==='NotAllowedError'||e&&e.name==='SecurityError'){vcMicHelp(e);return;}
+   try{VC.stream=await navigator.mediaDevices.getUserMedia({audio:true});}catch(e2){vcMicHelp(e2);return;}}VC.me=vcMeter(VC.stream);}
  VC.on=!VC.on;VC.stream.getAudioTracks().forEach(t=>t.enabled=VC.on);VC.peers.forEach(vcAttach);
  buzz(6);toast(VC.on?'Mic on. Everyone at the table can hear you.':'Mic off.');vcUI();}
 function vcUI(){const on=VC.on,av=vcAvail();const b=document.getElementById('micbtn');
