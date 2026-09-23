@@ -683,6 +683,9 @@ html:not([data-tbl]) .panel{background:#FFFDF9;box-shadow:inset 0 0 0 1px #E8DEC
 body:has(.hometop) .howbtn{color:#1F2B2F;background:transparent;box-shadow:inset 0 0 0 1px #D8C7A6}
 </style>
 <style id="safety-ui">
+#status[data-t]::after{content:" · " attr(data-t);font-variant-numeric:tabular-nums;opacity:.8}
+#status[data-hot]::after{color:#E5604D;opacity:1;font-weight:700}
+
 .btn.danger{color:#A8232B}
 .btn.danger-solid{background:#A8232B;color:#fff}
 .linkbtn{display:block;margin:12px auto 0;background:none;border:0;font:inherit;font-size:13px;font-weight:600;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px}
@@ -1034,10 +1037,32 @@ h.splice(h.indexOf(c),1);N.discard.push(c);N.ginDown=c;mv(N,'discard',c);selecte
 else return;
 }
 N.rev=(S.rev||0)+1;N.by=myId;commit(N);}
+
+/* ---------- turn timer: every player gets 15 seconds per turn (online and friends games) ---------- */
+const TURN_MS=15000;let turnSeen=Date.now(),tmrLast=-1;
+const timedGame=()=>S&&S.status==='playing'&&mode!=='solo'&&S.players[S.turn]&&!S.players[S.turn].bot;
+const amAuthority=()=>(mode==='p2p'&&isHost)||(mode==='online'&&S&&S.hostId===myId);
+function autoTurn(){const N=clone(S);const p=N.players[N.turn],h=N.hands[p.id];
+ if(N.phase==='draw'){if(!drawFor(N)){if(!N.discard.length)return;const c=N.discard.pop();h.push(c);N.took=c;N.phase='discard';mv(N,'take',c);}
+  if(cover(h)){win(N,true);N.tmo={k:N.move.seq,n:p.name,me:p.id};N.rev=(S.rev||0)+1;N.by=myId;commit(N);return;}}
+ const c=pickDiscard(h,N.took);h.splice(h.indexOf(c),1);N.discard.push(c);mv(N,'discard',c);
+ N.tmo={k:N.move.seq,n:p.name,me:p.id};
+ if(cover(h))win(N,false);else{N.turn=(N.turn+1)%N.players.length;N.phase='draw';N.took=null;}
+ if(p.id===myId)selected=null;N.rev=(S.rev||0)+1;N.by=myId;commit(N);}
+setInterval(()=>{const st=document.getElementById('status');
+ if(screen!=='table'||!timedGame()){if(st&&st.dataset.t){delete st.dataset.t;delete st.dataset.hot;}tmrLast=-1;return;}
+ const left=turnSeen+TURN_MS-Date.now(),sec=Math.max(0,Math.ceil(left/1000)),mine=S.turn===meIdx();
+ if(st){const v=Math.min(15,sec)+'s';if(st.dataset.t!==v)st.dataset.t=v;if(sec<=5)st.dataset.hot='1';else delete st.dataset.hot;}
+ if(mine&&sec!==tmrLast&&sec<=5&&sec>0){SFX.tick();if(sec===5)buzz(40);}
+ tmrLast=sec;
+ if(left<-800&&amAuthority())autoTurn();
+},250);
 let soloSaveT=null;
-function commit(N){apply(N);if(mode==='solo'){clearTimeout(soloSaveT);if(N.status==='over')ls.del('lg-solo');else soloSaveT=setTimeout(()=>{if(mode==='solo'&&S)ls.set('lg-solo',JSON.stringify(S));},400);scheduleBot();}if(mode==='p2p'&&isHost)broadcast();if(ref){const snap=N;writeQ=writeQ.then(()=>ref.set(snap)).catch(e=>toast(errMsg(e)));}}
+function commit(N){if(!S||N.turn!==S.turn||N.handNo!==S.handNo||N.status!==S.status||N.phase==='draw'&&S.phase!=='draw')N.turnAt=Date.now();apply(N);if(mode==='solo'){clearTimeout(soloSaveT);if(N.status==='over')ls.del('lg-solo');else soloSaveT=setTimeout(()=>{if(mode==='solo'&&S)ls.set('lg-solo',JSON.stringify(S));},400);scheduleBot();}if(mode==='p2p'&&isHost)broadcast();if(ref){const snap=N;writeQ=writeQ.then(()=>ref.set(snap)).catch(e=>toast(errMsg(e)));}}
 function willAnim(prev,N){return !(screen!=='table'||!prev||!N.move||!prev.move||prev.status==='lobby'||N.handNo!==prev.handNo||N.move.seq===prev.move.seq);}
-function apply(N){const prev=S;const anim=willAnim(prev,N);const before=anim?snapRects():null;S=N;draw();if(anim)animate(prev,N,before);}
+function apply(N){const prev=S;
+if(!prev||N.turn!==prev.turn||N.handNo!==prev.handNo||N.status!==prev.status||N.turnAt!==prev.turnAt)turnSeen=Date.now()+(N.move&&N.move.t==='deal'&&!reduce?2600:0);
+if(N.tmo&&(!prev||!prev.tmo||prev.tmo.k!==N.tmo.k))setTimeout(()=>toast(N.tmo.me===myId?'Time’s up, we played your turn for you.':esc(N.tmo.n)+' ran out of time.',3000),150);const anim=willAnim(prev,N);const before=anim?snapRects():null;S=N;draw();if(anim)animate(prev,N,before);}
 function errMsg(e){if(e&&e.code==='quota_exceeded')return 'Table storage is full. Try again later.';if(e&&e.code==='resource_exhausted')return 'Too many moves at once. Wait a moment.';return 'Couldn’t reach the table. Check your connection.';}
 let tt;function toast(m,ms){const el=$('#toast');el.textContent=m;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),ms||2800);}
 
