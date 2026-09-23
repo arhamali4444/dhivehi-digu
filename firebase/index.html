@@ -692,6 +692,7 @@ body:has(.hometop) .howbtn{color:#1F2B2F;background:transparent;box-shadow:inset
 .vcrow>span{font-size:12px;color:var(--muted);line-height:1.35}
 .vcbtn{flex:none;display:inline-flex;align-items:center;gap:6px;min-width:128px;justify-content:center}
 .vcbtn[aria-pressed="true"]{background:#2FA66A!important;color:#fff!important}
+.micsteps{margin:0;padding-left:20px;font-size:14px;line-height:1.5}.micsteps li{margin:4px 0}
 .vtalk{border-radius:50%!important;box-shadow:0 0 0 calc(2px + var(--vl,0)*6px) rgba(47,166,106,.6),0 0 calc(6px + var(--vl,0)*18px) rgba(47,166,106,.5)!important;transition:box-shadow .09s linear}
 
 .acrow{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin:0 0 14px;padding:9px 12px 9px 10px;border:0;border-radius:18px;background:transparent;box-shadow:inset 0 0 0 1px #D8C7A6;color:var(--ink);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
@@ -2108,9 +2109,17 @@ async function vcOnSignal(from,d){if(!vcAvail()||!d||!from||from===myId||!S.play
   await p.pc.setLocalDescription(await p.pc.createAnswer());await vcWait(p.pc);if(VC.peers.get(from)!==p)return;vcSend(from,{t:'answer',sdp:p.pc.localDescription.sdp});}
  else if(d.t==='answer'){const p=VC.peers.get(from);if(p&&p.pc.signalingState==='have-local-offer')await p.pc.setRemoteDescription({type:'answer',sdp:String(d.sdp)});}}catch(e){vcDrop(from);}}
 function vcStopAll(){[...VC.peers.keys()].forEach(vcDrop);if(VC.stream){VC.stream.getTracks().forEach(t=>t.stop());VC.stream=null;}try{VC.me&&VC.me.src.disconnect();}catch(e){}VC.me=null;VC.on=false;VC.lv={};VC.code=null;vcUI();}
+function vcMicHelp(e){const nm=(e&&e.name)||'Error';const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const crios=/CriOS/.test(navigator.userAgent);
+if(nm==='NotReadableError'||nm==='AbortError'){toast('Your mic is busy. End any phone or WhatsApp call, then try again.',5000);return;}
+if(nm==='NotFoundError'||nm==='OverconstrainedError'){toast('No microphone found on this device.',4500);return;}
+const steps=ios?(crios?'<li>Open the iPhone <b>Settings</b> app → <b>Apps</b> → <b>Chrome</b>.</li><li>Turn <b>Microphone</b> on.</li><li>Come back and reload the game.</li>'
+ :'<li>In Safari, tap the <b>page settings</b> button on the left of the address bar (or <b>aA</b>).</li><li>Tap <b>Website Settings</b> → <b>Microphone</b> → <b>Allow</b>.</li><li>If that’s already set, open iPhone <b>Settings</b> → <b>Apps</b> → <b>Safari</b> → <b>Microphone</b> → <b>Ask</b> or <b>Allow</b>.</li><li>Reload the game and tap <b>Turn on mic</b> again.</li>')
+ :'<li>Tap the <b>lock</b> or <b>settings</b> icon next to the address.</li><li>Set <b>Microphone</b> to <b>Allow</b>.</li><li>Reload the game and tap <b>Turn on mic</b> again.</li>';
+sheet(`<div class="grab"></div><h2>Allow the microphone</h2><p class="muted" style="margin:4px 0 10px">Your browser blocked the mic for this game. To talk:</p><ol class="micsteps">${steps}</ol><p class="muted" style="font-size:11px;margin:8px 0 0">You can still hear everyone without a mic. (${esc(nm)})</p><div class="row"><button class="btn primary" data-a="close">OK</button></div>`);}
 async function vcMic(){if(!vcAvail())return;vcAC();VC.peers.forEach(p=>{if(p.au.paused&&p.au.srcObject)p.au.play().catch(()=>{});});
  if(!VC.stream){try{VC.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
-  catch(e){toast('Microphone is blocked. Allow it for this site in your browser settings to talk.',5000);return;}VC.me=vcMeter(VC.stream);}
+  catch(e){vcMicHelp(e);return;}VC.me=vcMeter(VC.stream);}
  VC.on=!VC.on;VC.stream.getAudioTracks().forEach(t=>t.enabled=VC.on);VC.peers.forEach(vcAttach);
  buzz(6);toast(VC.on?'Mic on. Everyone at the table can hear you.':'Mic off.');vcUI();}
 function vcUI(){const on=VC.on,av=vcAvail();const b=document.getElementById('micbtn');
